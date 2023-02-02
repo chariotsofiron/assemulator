@@ -1,4 +1,9 @@
 
+KEY_UP:         .set 1
+KEY_DOWN:       .set 2
+KEY_LEFT:       .set 4
+KEY_RIGHT:      .set 8
+
 
 ; get user input
 
@@ -8,32 +13,23 @@
         mov c, 1        ; dx
         mov d, -1       ; dy
 
-        mov g, 1
-        mov h, -1       ; just for copying
-
+loop:
         ; read buttons
-        pld e, buttonsp
+        pld e, buttons
 
         ; handle controls
-        tst e, 1        ; up
+        tst e, KEY_UP
         cad b, d
-        tst e, 2        ; down
+        tst e, KEY_DOWN
         cad b, c
-        tst e, 4        ; left
+        tst e, KEY_LEFT
         cad a, d
-        tst e, 8        ; right
+        tst e, KEY_RIGHT
         cad a, c
 
-
-        
-        eq a, 'w'
-        bt up
-        eq a, 's'
-        bt down
-        eq a, 'a'
-        bt left
-        eq a, 'd'
-        bt right
+        pst a, xpos
+        pst b, ypos
+        pst flip
 
 
 ; print apple

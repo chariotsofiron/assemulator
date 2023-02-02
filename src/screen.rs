@@ -1,3 +1,4 @@
+use crate::color::Color;
 use minifb::{Window, WindowOptions};
 
 use crate::word::UInt;
@@ -9,11 +10,8 @@ const HEIGHT: usize = 64 * SIZE_PX;
 const FPS: u64 = 30;
 const MILLIS_HZ: std::time::Duration = std::time::Duration::from_millis(1000 / FPS);
 
-/// Colors
-pub const WHITE: (u8, u8, u8) = (255, 241, 232);
-
 pub struct Screen {
-    buffer: [u32; WIDTH * HEIGHT],
+    buffer: [Color; WIDTH * HEIGHT],
     window: Window,
 
     /// Time of last draw, used for managing FPS.
@@ -23,7 +21,7 @@ pub struct Screen {
 impl Default for Screen {
     fn default() -> Self {
         Self {
-            buffer: [0; WIDTH * HEIGHT],
+            buffer: [Color::Black; WIDTH * HEIGHT],
             window: Window::new("Assemulator", WIDTH, HEIGHT, WindowOptions::default()).unwrap(),
             last_draw: std::time::Instant::now() - MILLIS_HZ,
         }
@@ -31,17 +29,21 @@ impl Default for Screen {
 }
 
 impl Screen {
-    pub fn plot(&mut self, x: u8, y: u8, rgb: (u8, u8, u8)) {
+    pub fn plot(&mut self, x: u8, y: u8, color: Color) {
         let x = usize::from(x);
         let y = usize::from(y);
-        let color = u32::from_be_bytes([0, rgb.0, rgb.1, rgb.2]);
-
         // update buffer with new pixel according to size_px
         for i in 0..SIZE_PX {
             for j in 0..SIZE_PX {
                 self.buffer[(x * SIZE_PX + i) + (y * SIZE_PX + j) * WIDTH] = color;
             }
         }
+    }
+
+    pub fn read_pixel(&self, x: u8, y: u8) -> Color {
+        let x = usize::from(x);
+        let y = usize::from(y);
+        self.buffer[x + y * WIDTH]
     }
 
     /// Waits for the next frame to synchonize drawing.
@@ -91,21 +93,30 @@ impl Screen {
     pub fn draw(&mut self) {
         self.wait_for_frame();
         let (width, height) = self.window.get_size();
+
+        let buffer = self
+            .buffer
+            .iter()
+            .map(|&x| {
+                let (r, g, b) = x.to_rgb();
+                u32::from_be_bytes([0, r, g, b])
+            })
+            .collect::<Vec<_>>();
         self.window
-            .update_with_buffer(&self.buffer, width, height)
+            .update_with_buffer(&buffer, width, height)
             .unwrap();
     }
 
     pub fn flip(&mut self) {
         self.draw();
-        self.buffer = [0; WIDTH * HEIGHT];
+        self.buffer = [Color::Black; WIDTH * HEIGHT];
     }
 }
 
 impl Drop for Screen {
     fn drop(&mut self) {
         // keep the screen open if anything was written to it
-        while self.window.is_open() && self.buffer.iter().any(|&x| x != 0) {
+        while self.window.is_open() && self.buffer.iter().any(|&x| x != Color::Black) {
             self.draw();
             std::thread::sleep(std::time::Duration::from_millis(100));
         }

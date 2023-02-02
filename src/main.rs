@@ -5,6 +5,7 @@ mod port;
 mod screen;
 mod util;
 mod word;
+mod color;
 use crate::assembler::Assembler;
 use crate::cpus::bit_twiddler::BitTwiddler;
 use crate::cpus::risc16::Risc16;

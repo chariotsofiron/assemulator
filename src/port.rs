@@ -2,8 +2,8 @@ use std::collections::VecDeque;
 use strum_macros::EnumIter;
 
 use crate::{
+    color::Color,
     screen::Screen,
-    screen::WHITE,
     util::{input, read_int},
     word::UInt,
 };
@@ -18,6 +18,7 @@ pub struct Port<T: UInt> {
     /// Graphics
     x_coord: T,
     y_coord: T,
+    color: Color,
     screen: Screen,
 }
 
@@ -48,6 +49,7 @@ where
             }
             PortAddress::XPos => self.x_coord,
             PortAddress::YPos => self.y_coord,
+            PortAddress::Color => T::from(u8::from(self.color)),
             PortAddress::Flip | PortAddress::Draw => T::from(0),
             PortAddress::Buttons => self.screen.buttons::<T>(),
             PortAddress::ButtonsP => self.screen.buttonsp::<T>(),
@@ -66,9 +68,10 @@ where
                 self.screen.plot(
                     u8::try_from(self.x_coord).unwrap(),
                     u8::try_from(self.y_coord).unwrap(),
-                    WHITE,
+                    Color::White,
                 );
             }
+            PortAddress::Color => self.color = Color::from(u8::try_from(value).unwrap()),
             PortAddress::Flip => self.screen.flip(),
             PortAddress::Draw => self.screen.draw(),
             PortAddress::Random | PortAddress::Buttons | PortAddress::ButtonsP => {}
@@ -88,6 +91,7 @@ pub enum PortAddress {
     /// Graphics
     XPos,
     YPos,
+    Color,
     Flip,
     Draw,
     Buttons,
@@ -104,10 +108,11 @@ impl TryFrom<usize> for PortAddress {
             2 => Ok(Self::Random),
             8 => Ok(Self::XPos),
             9 => Ok(Self::YPos),
-            10 => Ok(Self::Flip),
-            11 => Ok(Self::Draw),
-            12 => Ok(Self::Buttons),
-            13 => Ok(Self::ButtonsP),
+            10 => Ok(Self::Color),
+            11 => Ok(Self::Flip),
+            12 => Ok(Self::Draw),
+            13 => Ok(Self::Buttons),
+            14 => Ok(Self::ButtonsP),
 
             _ => Err(format!("Invalid port address: {}", value)),
         }
@@ -122,10 +127,11 @@ impl From<PortAddress> for usize {
             PortAddress::Random => 2,
             PortAddress::XPos => 8,
             PortAddress::YPos => 9,
-            PortAddress::Flip => 10,
-            PortAddress::Draw => 11,
-            PortAddress::Buttons => 12,
-            PortAddress::ButtonsP => 13,
+            PortAddress::Color => 10,
+            PortAddress::Flip => 11,
+            PortAddress::Draw => 12,
+            PortAddress::Buttons => 13,
+            PortAddress::ButtonsP => 14,
         }
     }
 }
