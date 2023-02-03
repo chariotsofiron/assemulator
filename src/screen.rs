@@ -22,7 +22,8 @@ impl Default for Screen {
     fn default() -> Self {
         Self {
             buffer: [Color::Black; WIDTH * HEIGHT],
-            window: Window::new("Assemulator", WIDTH, HEIGHT, WindowOptions::default()).unwrap(),
+            window: Window::new("Assemulator", WIDTH, HEIGHT, WindowOptions::default())
+                .unwrap(),
             last_draw: std::time::Instant::now() - MILLIS_HZ,
         }
     }

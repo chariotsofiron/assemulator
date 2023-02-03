@@ -14,7 +14,7 @@ pub struct Mira {
     regs: EnumMap<Register, Wrapping<WordSize>>,
     x: bool,
     program: Vec<u8>,
-    
+
     data: Vec<WordSize>,
     ports: Port<WordSize>,
 }

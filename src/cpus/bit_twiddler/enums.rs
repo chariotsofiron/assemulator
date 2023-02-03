@@ -93,7 +93,6 @@ pub enum Mnemonic {
     Ret,
 }
 
-
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Enum, EnumString)]
 #[strum(ascii_case_insensitive)]
 pub enum Register {

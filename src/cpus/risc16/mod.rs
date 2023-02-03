@@ -53,7 +53,9 @@ impl Cpu for Risc16 {
             [Inst(Nand), Reg(ra), Reg(rb), Reg(rc)] => {
                 0b010 << 13 | ra.to_a() | rb.to_b() | rc.to_c()
             }
-            [Inst(Lui), Reg(ra), Imm(imm)] => 0b011 << 13 | ra.to_a() | mask::<u16>(imm, 10)?,
+            [Inst(Lui), Reg(ra), Imm(imm)] => {
+                0b011 << 13 | ra.to_a() | mask::<u16>(imm, 10)?
+            }
             [Inst(St), Reg(ra), Reg(rb), Imm(imm)] => {
                 0b100 << 13 | ra.to_a() | rb.to_b() | mask::<u16>(imm, 7)?
             }
@@ -61,7 +63,10 @@ impl Cpu for Risc16 {
                 0b101 << 13 | ra.to_a() | rb.to_b() | mask::<u16>(imm, 7)?
             }
             [Inst(Beq), Reg(ra), Reg(rb), Imm(imm)] => {
-                0b110 << 13 | ra.to_a() | rb.to_b() | mask::<u16>((imm - address) / 2, 7)?
+                0b110 << 13
+                    | ra.to_a()
+                    | rb.to_b()
+                    | mask::<u16>((imm - address) / 2, 7)?
             }
             [Inst(Jalr), Reg(ra), Reg(rb)] => 0b111 << 13 | ra.to_a() | rb.to_b(),
             _ => Err("Invalid instruction".to_owned())?,

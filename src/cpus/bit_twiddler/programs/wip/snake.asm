@@ -30,17 +30,18 @@ loop:
         pst a, xpos
         pst b, ypos
         pst flip
+        jmp loop
 
 
-; print apple
-
-        pld a, RNG
-        and a, 0b11111
-        pst a, X
-        
-        pld a, RNG
-        and a, 0b11111
-        pst a, Y
-
-        mov a, color
-        pst a, COLOR
+; ; print apple
+; 
+;         pld a, RNG
+;         and a, 0b11111
+;         pst a, X
+;         
+;         pld a, RNG
+;         and a, 0b11111
+;         pst a, Y
+; 
+;         mov a, color
+;         pst a, COLOR

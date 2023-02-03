@@ -71,7 +71,9 @@ where
                     Color::White,
                 );
             }
-            PortAddress::Color => self.color = Color::from(u8::try_from(value).unwrap()),
+            PortAddress::Color => {
+                self.color = Color::from(u8::try_from(value).unwrap())
+            }
             PortAddress::Flip => self.screen.flip(),
             PortAddress::Draw => self.screen.draw(),
             PortAddress::Random | PortAddress::Buttons | PortAddress::ButtonsP => {}

@@ -1,6 +1,6 @@
 pub mod bit_twiddler;
-pub mod risc16;
 pub mod mira;
+pub mod risc16;
 use std::str::FromStr;
 
 /// A token from the assembler
@@ -21,9 +21,9 @@ pub trait Cpu: Default {
     type Reg: FromStr;
 
     /// Creates a new state with the PC initialized.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `pc` - The initial value of the program counter
     /// * `program` - The program instructions
     /// * `data` - The statically defined data
@@ -31,12 +31,15 @@ pub trait Cpu: Default {
 
     /// Parses a list of tokens into a list of bytes.
     /// Passes in the address that this instruction will be at
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `tokens` - The tokens to parse
     /// * `address` - The address that this instruction will be at
-    fn parse_tokens(tokens: Vec<Token<Self::Opcode, Self::Reg>>, address: u64) -> Result<Vec<u8>, String>;
+    fn parse_tokens(
+        tokens: Vec<Token<Self::Opcode, Self::Reg>>,
+        address: u64,
+    ) -> Result<Vec<u8>, String>;
 
     /// Executes one instruction. Handles reading the instruction from memory, parsing
     /// it, and executing it. The function returns the number of cycles it took to execute.

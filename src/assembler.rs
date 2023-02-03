@@ -144,16 +144,29 @@ impl Assembler {
             .next()
             .ok_or_else(|| format_error(dir_cmd, "Expected directive"))?;
         match directive.as_str() {
-            "i8" => {
-                for pair in pairs {
-                    self.data.push(self.parse_constant(&pair)?);
+            // integer
+            x if x.starts_with('i') => {
+                match x.strip_prefix('i') {
+                    Some("8") => {
+                        for pair in pairs {
+                            self.data.push(self.parse_constant(&pair)?);
+                        }
+                    }
+                    Some("16") => {
+                        for pair in pairs {
+                            self.data.extend_from_slice(
+                                &self.parse_constant::<u16>(&pair)?.to_le_bytes(),
+                            );
+                        }
+                    }
+                    _ => return Err(format_error(dir_cmd, "Invalid integer size")),
                 }
-            }
-            "i16" => {
-                for pair in pairs {
-                    self.data
-                        .extend_from_slice(&self.parse_constant::<u16>(&pair)?.to_le_bytes());
-                }
+
+                self.symbols.extend(
+                    labels
+                        .iter()
+                        .map(|&x| (x.to_owned(), self.data.len() as u64)),
+                );
             }
             "strz" => {
                 // null-terminated string
@@ -166,6 +179,7 @@ impl Assembler {
                 let value = pairs
                     .next()
                     .ok_or_else(|| format_error(dir_cmd, "Expected value"))?;
+                println!("hello {:?}", labels);
                 for label in labels {
                     self.symbols
                         .insert((*label).to_owned(), self.parse_constant(&value)?);
@@ -228,12 +242,8 @@ impl Assembler {
                     address += inst_bytes.len() as u64;
                 }
                 Rule::dir => {
-                    self.symbols.extend(
-                        current_labels
-                            .drain(..)
-                            .map(|x| (x.to_owned(), self.data.len() as u64)),
-                    );
                     self.handle_directive(&pair, &current_labels)?;
+                    current_labels.clear();
                 }
                 _ => {}
             }

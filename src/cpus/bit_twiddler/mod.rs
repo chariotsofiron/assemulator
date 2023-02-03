@@ -38,9 +38,9 @@ impl Cpu for BitTwiddler {
         _: u64,
     ) -> Result<Vec<u8>, String> {
         use Mnemonic::{
-            Add, Addb, Addc, Addx, And, Bf, Bt, Btd, Cad, Csb, Eq, Geq, Ges, Jmp, Jsr, Ld, Mov,
-            Mvf, Mvt, Neg, Or, Pld, Pop, Psh, Pst, Ret, Shl, Shlb, Shlc, Shlx, Shr, Shrb, Shrc,
-            Shrx, St, Sub, Subb, Subc, Subx, Swap, Tst, Xor,
+            Add, Addb, Addc, Addx, And, Bf, Bt, Btd, Cad, Csb, Eq, Geq, Ges, Jmp, Jsr,
+            Ld, Mov, Mvf, Mvt, Neg, Or, Pld, Pop, Psh, Pst, Ret, Shl, Shlb, Shlc, Shlx,
+            Shr, Shrb, Shrc, Shrx, St, Sub, Subb, Subc, Subx, Swap, Tst, Xor,
         };
         use Token::{Imm, Inst, Reg};
         let inst: u16 = match *tokens {
@@ -162,30 +162,39 @@ impl Cpu for BitTwiddler {
                 0x06 => self.x = self.regs[ra] >= self.regs[rb],
                 0x07 => self.x = (self.regs[ra].0 as i8) >= (self.regs[rb].0 as i8),
                 0x08 => self.regs[ra] = self.regs[ra] + self.regs[rb],
-                0x09 => self.regs[ra] = self.regs[ra] + self.regs[rb] + Wrapping(u8::from(self.x)),
+                0x09 => {
+                    self.regs[ra] =
+                        self.regs[ra] + self.regs[rb] + Wrapping(u8::from(self.x))
+                }
                 0x0a => {
                     self.regs[ra] = self.regs[ra] + self.regs[rb];
                     self.x = self.regs[ra] < self.regs[rb];
                 }
                 0x0b => {
-                    self.regs[ra] = self.regs[ra] + self.regs[rb] + Wrapping(u8::from(self.x));
+                    self.regs[ra] =
+                        self.regs[ra] + self.regs[rb] + Wrapping(u8::from(self.x));
                     self.x = self.regs[ra] < self.regs[rb];
                 }
                 0x0c => self.regs[ra] = self.regs[ra] - self.regs[rb],
-                0x0d => self.regs[ra] = self.regs[ra] - self.regs[rb] + Wrapping(u8::from(self.x)),
+                0x0d => {
+                    self.regs[ra] =
+                        self.regs[ra] - self.regs[rb] + Wrapping(u8::from(self.x))
+                }
                 0x0e => {
                     self.regs[ra] = self.regs[ra] - self.regs[rb];
                     self.x = self.regs[ra] > self.regs[rb];
                 }
                 0x0f => {
-                    self.regs[ra] = self.regs[ra] - self.regs[rb] + Wrapping(u8::from(self.x));
+                    self.regs[ra] =
+                        self.regs[ra] - self.regs[rb] + Wrapping(u8::from(self.x));
                     self.x = self.regs[ra] > self.regs[rb];
                 }
                 // shl
                 0x10 => self.regs[ra] = Wrapping(self.regs[rb].0.wrapping_shl(1)),
                 // shlc
                 0x11 => {
-                    self.regs[ra] = Wrapping(self.regs[rb].0.wrapping_shl(1) | u8::from(self.x));
+                    self.regs[ra] =
+                        Wrapping(self.regs[rb].0.wrapping_shl(1) | u8::from(self.x));
                 }
                 // shlx
                 0x12 => {
@@ -195,7 +204,8 @@ impl Cpu for BitTwiddler {
                 // shlb
                 0x13 => {
                     let tmp = self.regs[rb].0 & 0x80 != 0;
-                    self.regs[ra] = Wrapping(self.regs[rb].0.wrapping_shl(1) | u8::from(self.x));
+                    self.regs[ra] =
+                        Wrapping(self.regs[rb].0.wrapping_shl(1) | u8::from(self.x));
                     self.x = tmp;
                 }
                 // shr
@@ -203,7 +213,8 @@ impl Cpu for BitTwiddler {
                 // shrc
                 0x15 => {
                     self.regs[ra] = Wrapping(
-                        self.regs[rb].0.wrapping_shr(1) | u8::from(self.x).wrapping_shl(7),
+                        self.regs[rb].0.wrapping_shr(1)
+                            | u8::from(self.x).wrapping_shl(7),
                     );
                 }
                 // shrx
@@ -215,7 +226,8 @@ impl Cpu for BitTwiddler {
                 0x17 => {
                     let tmp = self.regs[rb].0 & 0x01 != 0;
                     self.regs[ra] = Wrapping(
-                        self.regs[rb].0.wrapping_shr(1) | u8::from(self.x).wrapping_shl(7),
+                        self.regs[rb].0.wrapping_shr(1)
+                            | u8::from(self.x).wrapping_shl(7),
                     );
                     self.x = tmp;
                 }
@@ -244,8 +256,10 @@ impl Cpu for BitTwiddler {
                 0x1c => self.regs[ra] = -self.regs[rb],
                 // swap nibbles
                 0x1d => {
-                    self.regs[ra] =
-                        Wrapping(self.regs[ra].0.wrapping_shr(4) | self.regs[ra].0.wrapping_shl(4));
+                    self.regs[ra] = Wrapping(
+                        self.regs[ra].0.wrapping_shr(4)
+                            | self.regs[ra].0.wrapping_shl(4),
+                    );
                 }
 
                 // push
@@ -342,7 +356,8 @@ impl Cpu for BitTwiddler {
                 },
                 // load offset
                 0b11100 => {
-                    self.regs[ra] = Wrapping(self.data[usize::from((self.regs[rb] + imm).0)]);
+                    self.regs[ra] =
+                        Wrapping(self.data[usize::from((self.regs[rb] + imm).0)]);
                 }
                 // store offset
                 0b11101 => {
