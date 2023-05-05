@@ -1,8 +1,6 @@
 # Assemulator
 
-Assemulator is a framework I built to help me design, assemble, and emulate instruction sets.
-
-Historically, I would write a custom assembler for each CPU I was working on. I wanted a more generic tool so I wouldn't have to implement the same functionality each time.
+Assemulator is a framework for designing, assembling, and emulating instruction sets.
 
 Adding support for an instruction set is done by implementing three functions (defined and documented [here](src/cpus/mod.rs))
 
