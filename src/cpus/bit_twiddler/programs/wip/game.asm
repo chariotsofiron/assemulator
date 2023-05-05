@@ -1,3 +1,5 @@
+mask:   .set 0x3f       ; mask for 6 bits
+
         ; initialize position
         mov a, 15       ; x pos
         mov b, 15       ; y pos
@@ -17,7 +19,9 @@ loop:   pld e, buttons  ; get user input
         cad a, c
 
         ; draw pixel
+        and a, mask
         pst a, xpos
+        and b, mask
         pst b, ypos
         pst a, flip
         jmp loop

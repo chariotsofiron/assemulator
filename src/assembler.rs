@@ -179,7 +179,6 @@ impl Assembler {
                 let value = pairs
                     .next()
                     .ok_or_else(|| format_error(dir_cmd, "Expected value"))?;
-                println!("hello {:?}", labels);
                 for label in labels {
                     self.symbols
                         .insert((*label).to_owned(), self.parse_constant(&value)?);
