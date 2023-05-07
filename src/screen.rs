@@ -10,8 +10,10 @@ const HEIGHT: usize = 64 * SIZE_PX;
 const FPS: u64 = 30;
 const MILLIS_HZ: std::time::Duration = std::time::Duration::from_millis(1000 / FPS);
 
+// Double-buffered screen.
 pub struct Screen {
     buffer: [Color; WIDTH * HEIGHT],
+    screen: [Color; WIDTH * HEIGHT],
     window: Window,
 
     /// Time of last draw, used for managing FPS.
@@ -22,14 +24,15 @@ impl Default for Screen {
     fn default() -> Self {
         Self {
             buffer: [Color::Black; WIDTH * HEIGHT],
-            window: Window::new("Assemulator", WIDTH, HEIGHT, WindowOptions::default())
-                .unwrap(),
+            screen: [Color::Black; WIDTH * HEIGHT],
+            window: Window::new("Assemulator", WIDTH, HEIGHT, WindowOptions::default()).unwrap(),
             last_draw: std::time::Instant::now() - MILLIS_HZ,
         }
     }
 }
 
 impl Screen {
+    /// Writes a pixel with the given color to the frame buffer.
     pub fn plot(&mut self, x: u8, y: u8, color: Color) {
         let x = usize::from(x);
         let y = usize::from(y);
@@ -41,10 +44,11 @@ impl Screen {
         }
     }
 
+    /// Reads a pixel from the screen.
     pub fn read_pixel(&self, x: u8, y: u8) -> Color {
         let x = usize::from(x);
         let y = usize::from(y);
-        self.buffer[x + y * WIDTH]
+        self.screen[(x * SIZE_PX) + (y * SIZE_PX) * WIDTH]
     }
 
     /// Waits for the next frame to synchonize drawing.
@@ -58,16 +62,16 @@ impl Screen {
     }
 
     /// Returns the state of the buttons.
-    pub fn buttons<T: UInt>(&self) -> T {
-        let mut buttons = T::from(0);
+    pub fn buttons(&self) -> u8 {
+        let mut buttons = 0;
         for key in self.window.get_keys() {
             match key {
-                minifb::Key::Up => buttons = buttons | T::from(1),
-                minifb::Key::Down => buttons = buttons | T::from(2),
-                minifb::Key::Left => buttons = buttons | T::from(4),
-                minifb::Key::Right => buttons = buttons | T::from(8),
-                minifb::Key::Z => buttons = buttons | T::from(16),
-                minifb::Key::X => buttons = buttons | T::from(32),
+                minifb::Key::Up => buttons = buttons | 1,
+                minifb::Key::Down => buttons = buttons | 2,
+                minifb::Key::Left => buttons = buttons | 4,
+                minifb::Key::Right => buttons = buttons | 8,
+                minifb::Key::Z => buttons = buttons | 16,
+                minifb::Key::X => buttons = buttons | 32,
                 _ => {}
             }
         }
@@ -75,16 +79,16 @@ impl Screen {
     }
 
     /// Returns the state of the buttons, but only the first read.
-    pub fn buttonsp<T: UInt>(&self) -> T {
-        let mut buttons = T::from(0);
+    pub fn buttonsp(&self) -> u8 {
+        let mut buttons = 0;
         for key in self.window.get_keys_pressed(minifb::KeyRepeat::No) {
             match key {
-                minifb::Key::Up => buttons = buttons | T::from(1),
-                minifb::Key::Down => buttons = buttons | T::from(2),
-                minifb::Key::Left => buttons = buttons | T::from(4),
-                minifb::Key::Right => buttons = buttons | T::from(8),
-                minifb::Key::Z => buttons = buttons | T::from(16),
-                minifb::Key::X => buttons = buttons | T::from(32),
+                minifb::Key::Up => buttons = buttons | 1,
+                minifb::Key::Down => buttons = buttons | 2,
+                minifb::Key::Left => buttons = buttons | 4,
+                minifb::Key::Right => buttons = buttons | 8,
+                minifb::Key::Z => buttons = buttons | 16,
+                minifb::Key::X => buttons = buttons | 32,
                 _ => {}
             }
         }
@@ -92,6 +96,7 @@ impl Screen {
     }
 
     pub fn draw(&mut self) {
+        self.screen = self.buffer;
         self.wait_for_frame();
         let (width, height) = self.window.get_size();
 

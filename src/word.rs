@@ -9,7 +9,6 @@ pub trait UInt:
 {
 }
 
-impl UInt for usize {}
 impl UInt for u8 {}
 impl UInt for u16 {}
 impl UInt for u32 {}

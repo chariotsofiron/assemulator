@@ -49,18 +49,23 @@ where
             }
             PortAddress::XPos => self.x_coord,
             PortAddress::YPos => self.y_coord,
-            PortAddress::Color => T::from(u8::from(self.color)),
+            PortAddress::Color => T::from(u8::from(self.screen.read_pixel(
+                u8::try_from(self.x_coord).unwrap(),
+                u8::try_from(self.y_coord).unwrap(),
+            ))),
             PortAddress::Flip | PortAddress::Draw => T::from(0),
-            PortAddress::Buttons => self.screen.buttons::<T>(),
-            PortAddress::ButtonsP => self.screen.buttonsp::<T>(),
+            PortAddress::Buttons => T::from(self.screen.buttons()),
+            PortAddress::ButtonsP => T::from(self.screen.buttonsp()),
         }
     }
 
     pub fn write_port(&mut self, port: PortAddress, value: T) {
         match port {
+            // print char to screen
             PortAddress::Char => {
                 print!("{}", char::from(u8::try_from(value).unwrap()));
             }
+            // print unsigned integer to screen
             PortAddress::Ticker => println!("{}", value),
             PortAddress::XPos => self.x_coord = value,
             PortAddress::YPos => {
@@ -71,9 +76,7 @@ where
                     Color::White,
                 );
             }
-            PortAddress::Color => {
-                self.color = Color::from(u8::try_from(value).unwrap())
-            }
+            PortAddress::Color => self.color = Color::from(u8::try_from(value).unwrap()),
             PortAddress::Flip => self.screen.flip(),
             PortAddress::Draw => self.screen.draw(),
             PortAddress::Random | PortAddress::Buttons | PortAddress::ButtonsP => {}

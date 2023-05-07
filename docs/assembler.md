@@ -37,7 +37,7 @@ Data: 5 bytes
 ## General Syntax
 
 
-`label:  (opcode|directive)? arg_list?   ; comment`
+`(label:)?  ((opcode|directive) arg_list?)?   (; comment)?`
 
 ## Expressions
 

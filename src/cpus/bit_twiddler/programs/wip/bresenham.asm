@@ -1,3 +1,24 @@
+        ; swap two registers using xor trick
+swap:   .macro a, b
+        xor a, b
+        xor b, a
+        xor a, b
+        .endm
+
+        ; compute the absolute value through a temporary
+abs:    .macro a, tmp
+        neg tmp, a
+        geq a, 0
+        mvf a, tmp
+
+        ; plot a point
+plot:   .macro x, y
+        pst x, xpos
+        pst y, ypos
+        pst x, draw
+
+
+
         ; computes
         ; e = abs(c - a)
         ; f = abs(d - b)
