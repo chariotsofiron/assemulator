@@ -102,3 +102,40 @@ plot_point:
         pst draw
         .endm
 ```
+
+
+
+
+
+# Feature ideas
+
+## Anonymous labels
+
+- sometimes we don't want to give a label an explicit name
+
+
+## Expressions
+
+
+
+## Macros
+
+
+
+## Label scopes
+
+- Could replace anonymous labels
+
+
+## Conditional assembly
+
+- e.g. want to move an immediate and want to generate different assembly depending on the value of the immediate
+
+```
+    .if <expr> > <expr>
+    ...code...
+    .endif
+```
+
+
+

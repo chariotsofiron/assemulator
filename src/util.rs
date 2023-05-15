@@ -1,8 +1,4 @@
-//! Utility functions.
-use core::ops::Neg;
 use std::io::Write;
-
-use crate::word::UInt;
 
 /// Masks a signed integer into a field of a given width.
 ///
@@ -61,21 +57,8 @@ pub fn parse_int(text: &str) -> Result<u64, String> {
     value.ok_or_else(|| format!("Invalid integer: {text}"))
 }
 
-// /// Converts a floating point value to a fixed point value.
-// ///
-// /// # Examples
-// ///
-// /// ```rust
-// /// use util::float_to_fixed;
-// /// assert_eq!(float_to_fixed(0.5, 8), 0b10000000);
-// /// assert_eq!(float_to_fixed(3.1415, 8), 0b11_00100100);
-// /// ```
-// pub fn _to_fixed(n: f64, fraction: u32) -> u64 {
-//     (n * f64::from(1_i32.wrapping_shl(fraction))) as u64
-// }
-
 /// Reads an int from user input.
-pub fn read_int<T: UInt>() -> T {
+pub fn read_int<T: TryFrom<u64>>() -> T {
     loop {
         match input("> ")
             .map_err(|err| err.to_string())

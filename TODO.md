@@ -26,3 +26,29 @@
 ```
 cargo clippy -- -W clippy::all -W clippy::pedantic -W clippy::restriction -W clippy::nursery -A clippy::implicit_return -A clippy::unseparated_literal_suffix -A clippy::pub_use -A clippy::std_instead_of_core
 ```
+
+TODO v2
+- [ ] function scopes
+- [ ] anonymous labels
+- [ ] macros
+
+how to handle instructions that expand to variable number of bytes based on label?
+only allow labels already declared?
+
+e.g.
+
+
+add
+add
+add
+
+    .if symbol < 5
+        add
+        add
+    .endif
+    .if symbol >= 5
+        add
+
+.org 4
+symbol:
+    add

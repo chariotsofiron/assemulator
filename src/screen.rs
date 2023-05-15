@@ -1,7 +1,6 @@
 use crate::color::Color;
 use minifb::{Window, WindowOptions};
 
-use crate::word::UInt;
 
 const SIZE_PX: usize = 10; // width/height of cell
 const WIDTH: usize = 64 * SIZE_PX;
