@@ -80,3 +80,8 @@ Data: 0 bytes
 ```
 
 ![bresenham](./images/bresenham.png)
+
+
+# Limitations
+
+- Can't dynamically pick an instruction based on size of immediate

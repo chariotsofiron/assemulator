@@ -1,23 +1,22 @@
 use std::collections::VecDeque;
-
+use strum_macros::EnumIter;
 use rand::{distributions::Standard, prelude::Distribution};
 
 use crate::{
     color::Color,
     screen::Screen,
     util::{input, read_int},
-    word::UInt,
 };
 
 /// The different ports.
-#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, EnumIter)]
 pub enum Port {
     /// Print character to screen, read char from stdin
     Char,
     /// Print unsigned byte to screen, read byte from stdin
     Ticker,
+    /// Set seed for random number generator, read random number
     Random,
-
     /// Write the x position for graphics
     XPos,
     /// Writes a white pixel to (x,y) in the frame buffer.

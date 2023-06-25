@@ -4,6 +4,8 @@ use super::{Cpu, Token};
 use crate::cpu::reg;
 use crate::port::Port;
 use crate::{port::PortState, util::mask};
+use opcode::Opcode;
+pub mod opcode;
 
 pub type Register = reg::Register<8>;
 type Word = u16;
@@ -20,11 +22,11 @@ pub struct Risc16 {
 }
 
 fn fmt1(op: u16, a: Register, b: Register, c: Register) -> u16 {
-    op << 13 | (a.0 as u16) << 10 | (b.0 as u16) | (c.0 as u16)
+    op << 13 | (a.0 as u16) << 10 | (b.0 as u16) << 7 | (c.0 as u16)
 }
 
 fn fmt2(op: u16, a: Register, b: Register, imm: u64) -> Result<u16, String> {
-    Ok(op << 13 | (a.0 as u16) << 10 | (b.0 as u16) | mask::<u16>(imm, 7)?)
+    Ok(op << 13 | (a.0 as u16) << 10 | (b.0 as u16) << 7 | mask::<u16>(imm, 7)?)
 }
 
 fn fmt3(op: u16, a: Register, imm: u64) -> Result<u16, String> {
@@ -32,6 +34,7 @@ fn fmt3(op: u16, a: Register, imm: u64) -> Result<u16, String> {
 }
 
 impl Cpu for Risc16 {
+    type Opcode = Opcode;
     type Reg = Register;
 
     fn new(pc: u64, program: Vec<u8>, data: Vec<u8>) -> Self {
@@ -39,28 +42,32 @@ impl Cpu for Risc16 {
             pc: pc as Word,
             program: program
                 .chunks_exact(2)
-                .map(|x| u16::from_le_bytes([x[0], x[1]]))
+                .map(|x| u16::from_be_bytes([x[0], x[1]]))
                 .collect(),
             data: data
                 .chunks_exact(2)
-                .map(|x| u16::from_le_bytes([x[0], x[1]]))
+                .map(|x| u16::from_be_bytes([x[0], x[1]]))
                 .collect(),
             ..Default::default()
         }
     }
 
-    fn parse_tokens(tokens: Vec<Token<Self::Reg>>, address: u64) -> Result<Vec<u8>, String> {
+    fn parse_tokens(
+        tokens: Vec<Token<Self::Opcode, Self::Reg>>,
+        address: usize,
+    ) -> Result<Vec<u8>, String> {
+        use Opcode::*;
         use Token::{Imm, Op, Reg};
-        let instruction: u16 = match *tokens {
-            [Op("add"), Reg(a), Reg(b), Reg(c)] => fmt1(0b000, a, b, c),
-            [Op("add"), Reg(a), Reg(b), Imm(c)] => fmt2(0b001, a, b, c)?,
-            [Op("nand"), Reg(a), Reg(b), Reg(c)] => fmt1(0b010, a, b, c),
-            [Op("lui"), Reg(a), Imm(imm)] => fmt3(0b011, a, imm)?,
-            [Op("ld"), Reg(a), Reg(b), Imm(c)] => fmt2(0b100, a, b, c)?,
-            [Op("st"), Reg(a), Reg(b), Imm(c)] => fmt2(0b101, a, b, c)?,
-            [Op("beq"), Reg(a), Reg(b), Imm(c)] => fmt2(0b110, a, b, (c - address) / 2)?,
-            [Op("jalr"), Reg(a), Reg(b)] => fmt2(0b111, a, b, 0)?,
-            _ => Err("Invalid instruction")?,
+        let instruction = match *tokens {
+            [Op(Add), Reg(a), Reg(b), Reg(c)] => fmt1(0b000, a, b, c),
+            [Op(Add), Reg(a), Reg(b), Imm(c)] => fmt2(0b001, a, b, c)?,
+            [Op(Nand), Reg(a), Reg(b), Reg(c)] => fmt1(0b010, a, b, c),
+            [Op(Lui), Reg(a), Imm(imm)] => fmt3(0b011, a, imm)?,
+            [Op(Ld), Reg(a), Reg(b), Imm(c)] => fmt2(0b100, a, b, c)?,
+            [Op(St), Reg(a), Reg(b), Imm(c)] => fmt2(0b101, a, b, c)?,
+            [Op(Beq), Reg(a), Reg(b), Imm(c)] => fmt2(0b110, a, b, (c - address as u64) / 2)?,
+            [Op(Jalr), Reg(a), Reg(b)] => fmt2(0b111, a, b, 0)?,
+            ref x => Err(format!("Invalid instruction: {x:?}"))?,
         };
         Ok(instruction.to_be_bytes().to_vec())
     }

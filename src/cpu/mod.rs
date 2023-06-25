@@ -1,13 +1,13 @@
-pub mod risc16;
 mod reg;
+pub mod risc16;
 
 /// A token from the assembler
 /// Register type is to be specified by the CPU.
 /// This is better than an integer because we can have custom names for registers
 #[derive(Debug)]
-pub enum Token<'a, T> {
+pub enum Token<U, T> {
     /// The opcode of the instruction
-    Op(&'a str),
+    Op(U),
     /// A register argument for an instruction
     Reg(T),
     /// An immediate argument for an instruction
@@ -15,7 +15,8 @@ pub enum Token<'a, T> {
 }
 
 pub trait Cpu: Default {
-    type Reg: for<'a> TryFrom<&'a str> + std::fmt::Debug;
+    type Opcode: for<'a> TryFrom<&'a str, Error = String> + std::fmt::Debug;
+    type Reg: for<'a> TryFrom<&'a str, Error = String> + std::fmt::Debug;
 
     /// Creates a new state with the PC initialized.
     ///
@@ -33,7 +34,10 @@ pub trait Cpu: Default {
     ///
     /// * `tokens` - The tokens to parse
     /// * `address` - The address that this instruction will be at
-    fn parse_tokens(tokens: Vec<Token<Self::Reg>>, address: u64) -> Result<Vec<u8>, String>;
+    fn parse_tokens(
+        tokens: Vec<Token<Self::Opcode, Self::Reg>>,
+        address: usize,
+    ) -> Result<Vec<u8>, String>;
 
     /// Executes one instruction. Handles reading the instruction from memory, parsing
     /// it, and executing it. The function returns the number of cycles it took to execute.

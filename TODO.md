@@ -28,6 +28,8 @@ cargo clippy -- -W clippy::all -W clippy::pedantic -W clippy::restriction -W cli
 ```
 
 TODO v2
+- just do anon labels and macros
+
 - [ ] function scopes
 - [ ] anonymous labels
 - [ ] macros

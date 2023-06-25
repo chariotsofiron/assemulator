@@ -1,3 +1,4 @@
+#[derive(Debug, Clone)]
 pub struct Macro {
     /// List of arguments.
     pub args: Vec<String>,
@@ -15,12 +16,12 @@ impl Macro {
         }
     }
 
-    pub fn expand(&self) -> Vec<String> {
+    pub fn expand(&self, values: &[&str]) -> Vec<String> {
         let mut instructions = Vec::new();
         for instruction in &self.instructions {
             let mut instruction = instruction.clone();
-            for (i, arg) in self.args.iter().enumerate() {
-                instruction = instruction.replace(&format!("${}", i), arg);
+            for (from, to) in self.args.iter().zip(values) {
+                instruction = instruction.replace(&format!("${from}"), to);
             }
             instructions.push(instruction);
         }

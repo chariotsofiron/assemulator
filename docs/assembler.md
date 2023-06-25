@@ -37,7 +37,7 @@ Data: 5 bytes
 ## General Syntax
 
 
-`(label:)?  ((opcode|directive) arg_list?)?   (; comment)?`
+`(label:)?  (opcode arg_list?)?  (; comment)?`
 
 ## Expressions
 
@@ -49,21 +49,27 @@ Supports decimal, hex, binary, and octal numbers.
 .i8     <expr>[, <expr>, ...]
         List of bytes, also supports .i16
 
+.f16    <float>
+        parses a 16-bit floating point value
+
+.i8.8   <decimal>[, <decimal>, ...]
+        parses a fixed-point value with 8 fractional bits
+        rounding to nearest true value.
+        a.b => a+b should be a multiple of 8
 
 .align  <expr>
         Insert as much zero bytes as required to reach an address
         where <n> low order bits are zero. For example
         align 2 would make an alignment to the next 32-bit boundary.
+
 .fill   <value>, <n>
         fills memory with value, n times
 
 .strz   "<string1>"[, "<string2>"...]
         array of null-terminated strings
 
-.set    <symbol>,<expression>
-        Create a new program symbol with the name <symbol> and assign
-        to it the value of <expression>. If <symbol> is already assigned,
-        it will contain a new value from now on.
+.set    <expression>
+        Set the value of the label to <expression>
 
 .org    <exp>[,<fill>]
         Sets the address of the current code to exp
@@ -74,14 +80,9 @@ Supports decimal, hex, binary, and octal numbers.
 .endm
         ends a macro definition
 
-.f16    <float>
-        parses a 16-bit floating point value
-
-.i8.8   <decimal>[, <decimal>, ...]
-        parses a fixed-point value with 8 fractional bits
-        rounding to nearest true value.
-        a.b => a+b should be a multiple of 8
-
+.include <file>
+        Includes the contents of <file> at the current position
+        in the assembly file
 
 ```
 
@@ -102,6 +103,8 @@ plot_point:
         pst draw
         .endm
 ```
+
+macros that use .if?
 
 
 
