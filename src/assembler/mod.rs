@@ -286,7 +286,7 @@ impl<'a, T: Cpu> Assembler<'a, T> {
                 for &arg in &tokens[1..] {
                     pieces.push(self.parse_arg(arg, second_pass)?);
                 }
-                let bytes = T::parse_tokens(pieces, self.program.len())?;
+                let bytes = T::parse(pieces, self.program.len())?;
                 if !second_pass {
                     if let Some(label) = std::mem::replace(&mut self.current_label, None) {
                         if self.symbols.contains_key(&label) {

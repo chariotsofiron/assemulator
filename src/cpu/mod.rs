@@ -34,7 +34,7 @@ pub trait Cpu: Default {
     ///
     /// * `tokens` - The tokens to parse
     /// * `address` - The address the instruction will be placed at
-    fn parse_tokens(
+    fn parse(
         tokens: Vec<Token<Self::Opcode, Self::Reg>>,
         address: usize,
     ) -> Result<Vec<u8>, String>;

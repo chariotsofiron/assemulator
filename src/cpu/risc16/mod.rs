@@ -1,10 +1,9 @@
-use std::num::Wrapping;
-
 use super::{Cpu, Token};
 use crate::cpu::reg;
 use crate::port::Port;
 use crate::{port::PortState, util::mask};
 use opcode::Opcode;
+use core::num::Wrapping;
 pub mod opcode;
 
 pub type Register = reg::Register<8>;
@@ -52,7 +51,7 @@ impl Cpu for Risc16 {
         }
     }
 
-    fn parse_tokens(
+    fn parse(
         tokens: Vec<Token<Self::Opcode, Self::Reg>>,
         address: usize,
     ) -> Result<Vec<u8>, String> {
