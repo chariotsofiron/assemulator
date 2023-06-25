@@ -1,9 +1,9 @@
 #[derive(Debug, Clone)]
 pub struct Macro {
     /// List of arguments.
-    pub args: Vec<String>,
+    args: Vec<String>,
     /// List of instructions.
-    pub instructions: Vec<String>,
+    instructions: Vec<String>,
 }
 
 

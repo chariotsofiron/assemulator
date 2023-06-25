@@ -22,7 +22,7 @@ where
 {
     // Compute up to 2^64 - 1 without overflow
     let mask: u64 = ((1 << (n_bits - 1)) - 1) * 2 + 1;
-    T::try_from(value & mask).map_err(|_| "Should not trigger".to_owned())
+    T::try_from(value & mask).map_err(|_err| "Should not trigger".to_owned())
 }
 
 /// Parses a string representing an integer.
@@ -43,7 +43,7 @@ where
 #[allow(clippy::option_if_let_else)]
 pub fn parse_int(text: &str) -> Result<u64, String> {
     let value = if let Some(x) = text.strip_prefix('-') {
-        Some(parse_int(x).map(|x| (!x) + 1)?)
+        Some(parse_int(x).map(|val| (!val) + 1)?)
     } else if let Some(x) = text.strip_prefix("0x") {
         u64::from_str_radix(x, 16).ok()
     } else if let Some(x) = text.strip_prefix("0b") {
@@ -63,11 +63,11 @@ pub fn read_int<T: TryFrom<u64>>() -> T {
         match input("> ")
             .map_err(|err| err.to_string())
             .and_then(|x| parse_int(x.trim()))
-            .and_then(|x| T::try_from(x).map_err(|_| "Invalid input".to_owned()))
+            .and_then(|x| T::try_from(x).map_err(|_err| "Invalid input".to_owned()))
         {
             Ok(x) => break x,
             Err(err) => {
-                println!("{}", err);
+                println!("{err}");
             }
         }
     }

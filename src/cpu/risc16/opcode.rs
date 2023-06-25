@@ -21,7 +21,7 @@ impl TryFrom<&str> for Opcode {
             "st" => Ok(Self::St),
             "beq" => Ok(Self::Beq),
             "jalr" => Ok(Self::Jalr),
-            _ => Err("Invalid opcode".to_owned()),
+            _ => Err(format!("Invalid opcode: {value}")),
         }
     }
 }

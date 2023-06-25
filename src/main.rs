@@ -1,11 +1,16 @@
 use crate::{assembler::Assembler, cpu::risc16::Risc16};
+/// Assembler
 mod assembler;
+/// Colors for screen
 mod color;
+/// CPUs
 mod cpu;
+/// I/O ports
 mod port;
+/// The screen
 mod screen;
+/// Utility functions
 mod util;
-mod word;
 use clap::Parser;
 use cpu::Cpu;
 
@@ -25,8 +30,10 @@ struct Args {
     file: String,
 }
 
+/// The supported CPUs
 #[derive(clap::ValueEnum, Clone)]
 enum Processor {
+    /// Risc16 CPU
     Risc16,
 }
 
@@ -40,12 +47,9 @@ enum Action {
 }
 
 /// Run the program
-fn run<T: Cpu>(args: &Args, text: &str) {
+fn run<T: Cpu>(args: &Args, text: &str) -> Result<(), String> {
     let mut asm = Assembler::<T>::new(text);
-    asm.assemble().unwrap_or_else(|err| {
-        eprintln!("{err}");
-        std::process::exit(1);
-    });
+    asm.assemble()?;
 
     println!("Program: {} bytes", asm.program.len());
     println!("Data: {} bytes", asm.data.len());
@@ -63,6 +67,7 @@ fn run<T: Cpu>(args: &Args, text: &str) {
             // println!("State: {:#?}", state);
         }
     }
+    Ok(())
 }
 
 fn main() -> Result<(), String> {
@@ -70,7 +75,7 @@ fn main() -> Result<(), String> {
     let text = std::fs::read_to_string(&args.file).map_err(|x| x.to_string())?;
 
     match args.processor {
-        Processor::Risc16 => run::<Risc16>(&args, &text),
+        Processor::Risc16 => run::<Risc16>(&args, &text)?,
     }
 
     Ok(())

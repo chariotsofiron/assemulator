@@ -1,3 +1,6 @@
+//! Assembler for the CPU.
+//!
+//! first pass directives: include, macro
 use self::macros::Macro;
 use crate::{
     cpu::{Cpu, Token},
@@ -62,7 +65,7 @@ fn tokenize_line<'a>(line: &'a str) -> Result<Vec<&'a str>, String> {
         }
         Ok(inst)
     } else {
-        Err(format!("invalid line: {}", line))
+        Err(format!("invalid line: {line}"))
     }
 }
 
@@ -84,6 +87,7 @@ pub struct Assembler<'a, Cpu> {
 }
 
 impl<'a, T: Cpu> Assembler<'a, T> {
+    /// Creates a new assembler for an assembly program.
     pub fn new(text: &'a str) -> Self {
         let symbols: HashMap<String, u64> = Port::iter()
             .map(|x| {
@@ -148,11 +152,11 @@ impl<'a, T: Cpu> Assembler<'a, T> {
         } else if let Some(&val) = self.symbols.get(arg) {
             val
         } else {
-            return Err(format!("invalid constant: {}", arg));
+            return Err(format!("invalid constant: {arg}"));
         };
 
         let n_bits = 8 * std::mem::size_of::<T>();
-        mask(value, n_bits).map_err(|err| format!("constant out of range: {}", err))
+        mask(value, n_bits).map_err(|err| format!("constant out of range: {err}"))
     }
 
     /// Parses a macro.
@@ -171,13 +175,13 @@ impl<'a, T: Cpu> Assembler<'a, T> {
             instructions.push(line.to_owned());
         }
 
-        Ok(Macro {
-            args: args.into_iter().map(|&x| x.to_owned()).collect::<Vec<_>>(),
+        Ok(Macro::new(
+            args.into_iter().map(|&x| x.to_owned()).collect::<Vec<_>>(),
             instructions,
-        })
+        ))
     }
 
-    /// Handles a directive.
+    /// Handles an assembler directive.
     fn handle_directive(
         &mut self,
         label: Option<String>,
@@ -205,7 +209,13 @@ impl<'a, T: Cpu> Assembler<'a, T> {
                 }
             }
             ".set" => self.declare_label(label, self.parse_constant(args[0], second_pass)?)?,
-            _ => return Err(format!("unknown directive: {}", directive)),
+            ".include" => {
+                for arg in args {
+                    let filename = remove_quotes(arg);
+                    let text = std::fs::read_to_string(&filename).map_err(|x| x.to_string())?;
+                }
+            }
+            _ => return Err(format!("unknown directive: {directive}")),
         }
         Ok(())
     }
@@ -213,12 +223,30 @@ impl<'a, T: Cpu> Assembler<'a, T> {
     fn declare_label(&mut self, label: Option<String>, value: u64) -> Result<(), String> {
         if let Some(label) = label {
             if self.symbols.contains_key(&label) {
-                return Err(format!("label already defined: {}", &label));
+                return Err(format!("label already defined: {label}"));
             }
             self.symbols.insert(label, value);
         }
         Ok(())
     }
+
+    // fn blahblah(&mut self, tokens: &[&str]) {
+    //     match tokens {
+    //         [".macro", args @ ..] => {}
+    //         [".i8", args @ ..] => {}
+    //         [".strz", args @ ..] => {}
+    //         [".set", args @ ..] => {}
+    //         [".include", args @ ..] => {}
+    //         [opcode, args @ ..] => {
+    //             let mut pieces: Vec<Token<T::Opcode, T::Reg>> =
+    //                 vec![Token::Op(T::Opcode::try_from(opcode)?)];
+    //             for &arg in args {
+    //                 pieces.push(self.parse_arg(arg, second_pass)?);
+    //             }
+    //         }
+    //         _ => {}
+    //     }
+    // }
 
     fn inside(&mut self, line: &str, second_pass: bool) -> Result<(), String> {
         if let Some(label) = parse_label(line) {

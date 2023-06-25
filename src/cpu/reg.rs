@@ -10,16 +10,16 @@ impl<const N: usize> TryFrom<&str> for Register<N> {
         let mut chars = reg.chars();
 
         if chars.next() != Some('r') {
-            return Err(format!("Invalid register: {}", reg));
+            return Err(format!("Invalid register: {reg}"));
         }
 
         let value = chars
             .as_str()
             .parse::<usize>()
-            .map_err(|_| format!("Invalid register: {}", reg))?;
+            .map_err(|_| format!("Invalid register: {reg}"))?;
 
         if value >= N {
-            return Err(format!("Invalid register: {}", reg));
+            return Err(format!("Invalid register: {reg}"));
         }
         Ok(Register(value))
     }

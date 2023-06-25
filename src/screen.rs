@@ -1,18 +1,27 @@
 use crate::color::Color;
 use minifb::{Window, WindowOptions};
 
-
+/// Width and height of a cell in pixels.
 const SIZE_PX: usize = 10; // width/height of cell
+/// Width of the screen in pixels.
 const WIDTH: usize = 64 * SIZE_PX;
+/// Height of the screen in pixels.
 const HEIGHT: usize = 64 * SIZE_PX;
 
+/// Frames per second.
 const FPS: u64 = 30;
-const MILLIS_HZ: std::time::Duration = std::time::Duration::from_millis(1000 / FPS);
+/// The time between frames.
+const MILLIS_HZ: core::time::Duration = core::time::Duration::from_millis(1000 / FPS);
 
-// Double-buffered screen.
+/// Double-buffered screen.
+/// We write to the buffer first, then copy to the screen.
+/// We can read what's currently written to the screen but not the buffer.
 pub struct Screen {
+    /// The buffer
     buffer: [Color; WIDTH * HEIGHT],
+    /// The screen
     screen: [Color; WIDTH * HEIGHT],
+    /// The window
     window: Window,
 
     /// Time of last draw, used for managing FPS.
@@ -25,7 +34,7 @@ impl Default for Screen {
             buffer: [Color::Black; WIDTH * HEIGHT],
             screen: [Color::Black; WIDTH * HEIGHT],
             window: Window::new("Assemulator", WIDTH, HEIGHT, WindowOptions::default()).unwrap(),
-            last_draw: std::time::Instant::now() - MILLIS_HZ,
+            last_draw: std::time::Instant::now(),
         }
     }
 }
@@ -33,21 +42,21 @@ impl Default for Screen {
 impl Screen {
     /// Writes a pixel with the given color to the frame buffer.
     pub fn plot(&mut self, x: u8, y: u8, color: Color) {
-        let x = usize::from(x);
-        let y = usize::from(y);
+        let pos_x = usize::from(x);
+        let pos_y = usize::from(y);
         // update buffer with new pixel according to size_px
         for i in 0..SIZE_PX {
             for j in 0..SIZE_PX {
-                self.buffer[(x * SIZE_PX + i) + (y * SIZE_PX + j) * WIDTH] = color;
+                self.buffer[(pos_x * SIZE_PX + i) + (pos_y * SIZE_PX + j) * WIDTH] = color;
             }
         }
     }
 
     /// Reads a pixel from the screen.
     pub fn read_pixel(&self, x: u8, y: u8) -> Color {
-        let x = usize::from(x);
-        let y = usize::from(y);
-        self.screen[(x * SIZE_PX) + (y * SIZE_PX) * WIDTH]
+        let pos_x = usize::from(x);
+        let pos_y = usize::from(y);
+        self.screen[(pos_x * SIZE_PX) + (pos_y * SIZE_PX) * WIDTH]
     }
 
     /// Waits for the next frame to synchonize drawing.
@@ -65,12 +74,12 @@ impl Screen {
         let mut buttons = 0;
         for key in self.window.get_keys() {
             match key {
-                minifb::Key::Up => buttons = buttons | 1,
-                minifb::Key::Down => buttons = buttons | 2,
-                minifb::Key::Left => buttons = buttons | 4,
-                minifb::Key::Right => buttons = buttons | 8,
-                minifb::Key::Z => buttons = buttons | 16,
-                minifb::Key::X => buttons = buttons | 32,
+                minifb::Key::Up => buttons |= 1,
+                minifb::Key::Down => buttons |= 2,
+                minifb::Key::Left => buttons |= 4,
+                minifb::Key::Right => buttons |= 8,
+                minifb::Key::Z => buttons |= 16,
+                minifb::Key::X => buttons |= 32,
                 _ => {}
             }
         }
@@ -82,12 +91,12 @@ impl Screen {
         let mut buttons = 0;
         for key in self.window.get_keys_pressed(minifb::KeyRepeat::No) {
             match key {
-                minifb::Key::Up => buttons = buttons | 1,
-                minifb::Key::Down => buttons = buttons | 2,
-                minifb::Key::Left => buttons = buttons | 4,
-                minifb::Key::Right => buttons = buttons | 8,
-                minifb::Key::Z => buttons = buttons | 16,
-                minifb::Key::X => buttons = buttons | 32,
+                minifb::Key::Up => buttons |= 1,
+                minifb::Key::Down => buttons |= 2,
+                minifb::Key::Left => buttons |= 4,
+                minifb::Key::Right => buttons |= 8,
+                minifb::Key::Z => buttons |= 16,
+                minifb::Key::X => buttons |= 32,
                 _ => {}
             }
         }

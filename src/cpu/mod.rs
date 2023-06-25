@@ -15,8 +15,8 @@ pub enum Token<U, T> {
 }
 
 pub trait Cpu: Default {
-    type Opcode: for<'a> TryFrom<&'a str, Error = String> + std::fmt::Debug;
-    type Reg: for<'a> TryFrom<&'a str, Error = String> + std::fmt::Debug;
+    type Opcode: for<'a> TryFrom<&'a str, Error = String>;
+    type Reg: for<'a> TryFrom<&'a str, Error = String>;
 
     /// Creates a new state with the PC initialized.
     ///
@@ -33,7 +33,7 @@ pub trait Cpu: Default {
     /// # Arguments
     ///
     /// * `tokens` - The tokens to parse
-    /// * `address` - The address that this instruction will be at
+    /// * `address` - The address the instruction will be placed at
     fn parse_tokens(
         tokens: Vec<Token<Self::Opcode, Self::Reg>>,
         address: usize,

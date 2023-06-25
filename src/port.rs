@@ -1,6 +1,6 @@
+use rand::{distributions::Standard, prelude::Distribution};
 use std::collections::VecDeque;
 use strum_macros::EnumIter;
-use rand::{distributions::Standard, prelude::Distribution};
 
 use crate::{
     color::Color,
@@ -29,7 +29,9 @@ pub enum Port {
     Flip,
     /// Write the frame buffer to the display.
     Draw,
+    /// Read the state of buttons.
     Buttons,
+    /// Read the state of buttonsp.
     ButtonsP,
 }
 
@@ -49,7 +51,7 @@ impl TryFrom<usize> for Port {
             13 => Ok(Self::Buttons),
             14 => Ok(Self::ButtonsP),
 
-            _ => Err(format!("Invalid port address: {}", value)),
+            _ => Err(format!("Invalid port address: {value}")),
         }
     }
 }
@@ -84,20 +86,21 @@ pub struct PortState<T> {
     chars: VecDeque<u8>,
 
     /// Graphics
+    /// The current x coordinate.
     x_coord: T,
+    /// The current y coordinate.
     y_coord: T,
+    /// The color to write to the screen.
     color: Color,
+    /// The screen.
     screen: Screen,
 }
 
 impl<T> PortState<T>
 where
-    T: Copy,
-    T: std::fmt::Display,
-    T: TryFrom<u64>,
-    T: From<u8>,
+    T: Copy + core::fmt::Display + TryFrom<u64> + From<u8>,
     u8: TryFrom<T>,
-    <u8 as TryFrom<T>>::Error: std::fmt::Debug,
+    <u8 as TryFrom<T>>::Error: core::fmt::Debug,
     Standard: Distribution<T>,
 {
     pub fn read_port(&mut self, port: Port) -> T {
@@ -134,7 +137,7 @@ where
                 print!("{}", char::from(u8::try_from(value).unwrap()));
             }
             // print unsigned integer to screen
-            Port::Ticker => println!("{}", value),
+            Port::Ticker => println!("{value}"),
             Port::XPos => self.x_coord = value,
             Port::YPos => {
                 self.y_coord = value;
