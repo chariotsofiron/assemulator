@@ -80,9 +80,10 @@ Supports decimal, hex, binary, and octal numbers.
 .endm
         ends a macro definition
 
-.include <file>
+.include <file>, <namespace>
         Includes the contents of <file> at the current position
         in the assembly file
+        prepend all labels with <namespace>.
 
 ```
 
