@@ -70,6 +70,7 @@ Supports decimal, hex, binary, and octal numbers.
 
 .set    <expression>
         Set the value of the label to <expression>
+        These need to be forward declared
 
 .org    <exp>[,<fill>]
         Sets the address of the current code to exp
@@ -80,10 +81,10 @@ Supports decimal, hex, binary, and octal numbers.
 .endm
         ends a macro definition
 
-.include <file>, <namespace>
+.include <file>
         Includes the contents of <file> at the current position
         in the assembly file
-        prepend all labels with <namespace>.
+        If label is present, all labels in <file> are prefixed by it
 
 ```
 

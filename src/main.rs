@@ -1,4 +1,6 @@
-use crate::{cpu::risc16::Risc16};
+use std::path::Path;
+
+use crate::cpu::risc16::Risc16;
 /// Assembler
 mod assembler;
 /// Colors for screen
@@ -11,6 +13,7 @@ mod port;
 mod screen;
 /// Utility functions
 mod util;
+use assembler::Assembler;
 use clap::Parser;
 use cpu::Cpu;
 
@@ -48,32 +51,37 @@ enum Action {
 
 /// Run the program
 fn run<T: Cpu>(args: &Args) -> Result<(), String> {
-    // let mut asm = Assembler::<T>::new(&args.file);
-    // asm.assemble()?;
+    let asm = Assembler::<T>::assemble(Path::new(&args.file))?;
 
-    // println!("Program: {} bytes", asm.program.len());
-    // println!("Data: {} bytes", asm.data.len());
-    // println!("-----------------");
+    println!("Program: {} bytes", asm.program.len());
+    println!("Data: {} bytes", asm.data.len());
+    println!("-----------------");
 
-    // match args.action {
-    //     Action::Assemble => {
-    //         println!("Data: {:#04x?}", asm.data);
-    //         println!("Program: {:#04x?}", asm.program);
-    //     }
-    //     Action::Run => {
-    //         let pc = asm.symbols.get("main").copied().unwrap_or_default();
-    //         let mut state = T::new(pc, asm.program, asm.data);
-    //         while state.step() != 0 {}
-    //         // println!("State: {:#?}", state);
-    //     }
-    // }
+    match args.action {
+        Action::Assemble => {
+            println!("Symbols: {:#?}", asm.symbols);
+            println!("Data: {:#04x?}", asm.data);
+            println!("Program: {:#04x?}", asm.program);
+
+            // for line in asm
+            //     .program
+            //     .chunks_exact(2)
+            //     .map(|x| u16::from_be_bytes([x[0], x[1]]))
+            // {
+            //     println!("{:#018b}", line);
+            // }
+        }
+        Action::Run => {
+            let pc = asm.symbols.get("main").copied().unwrap_or_default();
+            let mut state = T::new(pc, asm.program, asm.data);
+            while state.step() != 0 {}
+        }
+    }
     Ok(())
 }
 
 fn main() -> Result<(), String> {
     let args = Args::parse();
-    // let text = std::fs::read_to_string(&args.file).map_err(|x| x.to_string())?;
-
     match args.processor {
         Processor::Risc16 => run::<Risc16>(&args)?,
     }

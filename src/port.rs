@@ -81,7 +81,7 @@ impl From<Port> for usize {
 // - writing a number to the terminal
 // - ... what else?
 #[derive(Default)]
-pub struct PortState<T> {
+pub struct State<T> {
     /// The buffer of chars read from stdin.
     chars: VecDeque<u8>,
 
@@ -96,7 +96,7 @@ pub struct PortState<T> {
     screen: Screen,
 }
 
-impl<T> PortState<T>
+impl<T> State<T>
 where
     T: Copy + core::fmt::Display + TryFrom<u64> + From<u8>,
     u8: TryFrom<T>,
@@ -111,10 +111,7 @@ where
                 if self.chars.is_empty() {
                     self.chars.extend(input("> ").unwrap().as_bytes());
                 }
-                match self.chars.pop_front() {
-                    Some(c) => T::from(c),
-                    None => T::from(0),
-                }
+                T::from(self.chars.pop_front().unwrap_or_default())
             }
             Port::Ticker => read_int::<T>(),
             Port::Random => rand::random::<T>(),

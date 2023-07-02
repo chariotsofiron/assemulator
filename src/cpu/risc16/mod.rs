@@ -1,7 +1,7 @@
 use super::{Cpu, Token};
 use crate::cpu::reg;
 use crate::port::Port;
-use crate::{port::PortState, util::mask};
+use crate::{port::State, util::mask};
 use opcode::Opcode;
 use core::num::Wrapping;
 pub mod opcode;
@@ -11,13 +11,11 @@ type Word = u16;
 
 #[derive(Default)]
 pub struct Risc16 {
-    /// Program counter
     pc: Word,
-    /// General purpose registers
     regs: [Wrapping<Word>; 8],
     program: Vec<u16>,
     data: Vec<Word>,
-    ports: PortState<Word>,
+    ports: State<Word>,
 }
 
 fn fmt1(op: u16, a: Register, b: Register, c: Register) -> u16 {

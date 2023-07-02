@@ -30,12 +30,11 @@ cargo clippy -- -W clippy::all -W clippy::pedantic -W clippy::restriction -W cli
 TODO v2
 - just do anon labels and macros
 
-- [ ] function scopes
+- [x] macros
+- [x] include
+- [ ] include namespaces
 - [ ] anonymous labels
-- [ ] macros
-
-how to handle instructions that expand to variable number of bytes based on label?
-only allow labels already declared?
+- [ ] .if directive
 
 e.g.
 

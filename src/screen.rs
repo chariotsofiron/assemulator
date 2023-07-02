@@ -1,3 +1,5 @@
+use core::time::Duration;
+
 use crate::color::Color;
 use minifb::{Window, WindowOptions};
 
@@ -103,6 +105,7 @@ impl Screen {
         buttons
     }
 
+    /// Draws the buffer to the screen.
     pub fn draw(&mut self) {
         self.screen = self.buffer;
         self.wait_for_frame();
@@ -121,6 +124,7 @@ impl Screen {
             .unwrap();
     }
 
+    /// Draws the buffer to the screen and clear the buffer.
     pub fn flip(&mut self) {
         self.draw();
         self.buffer = [Color::Black; WIDTH * HEIGHT];
@@ -132,7 +136,7 @@ impl Drop for Screen {
         // keep the screen open if anything was written to it
         while self.window.is_open() && self.buffer.iter().any(|&x| x != Color::Black) {
             self.draw();
-            std::thread::sleep(std::time::Duration::from_millis(100));
+            std::thread::sleep(Duration::from_millis(100));
         }
     }
 }
