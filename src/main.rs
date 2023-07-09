@@ -1,6 +1,6 @@
-use std::path::Path;
+use std::path::PathBuf;
 
-use crate::cpu::risc16::Risc16;
+use crate::{cpu::risc16::Risc16, util::input};
 /// Assembler
 mod assembler;
 /// Colors for screen
@@ -13,7 +13,7 @@ mod port;
 mod screen;
 /// Utility functions
 mod util;
-use assembler::Assembler;
+use assembler::assembler2;
 use clap::Parser;
 use cpu::Cpu;
 
@@ -30,7 +30,7 @@ struct Args {
     action: Action,
 
     /// Input file
-    file: String,
+    file: PathBuf,
 }
 
 /// The supported CPUs
@@ -51,10 +51,14 @@ enum Action {
 
 /// Run the program
 fn run<T: Cpu>(args: &Args) -> Result<(), String> {
-    let asm = Assembler::<T>::assemble(Path::new(&args.file))?;
+    let asm = assembler2::Assembler::<T>::assemble(&args.file).unwrap_or_else(|e| {
+        eprintln!("Error: {}", e);
+        std::process::exit(1);
+    });
 
     println!("Program: {} bytes", asm.program.len());
     println!("Data: {} bytes", asm.data.len());
+    println!("Data: {:?}", asm.data);
     println!("-----------------");
 
     match args.action {
@@ -63,18 +67,20 @@ fn run<T: Cpu>(args: &Args) -> Result<(), String> {
             println!("Data: {:#04x?}", asm.data);
             println!("Program: {:#04x?}", asm.program);
 
-            // for line in asm
-            //     .program
-            //     .chunks_exact(2)
-            //     .map(|x| u16::from_be_bytes([x[0], x[1]]))
-            // {
-            //     println!("{:#018b}", line);
-            // }
+            for line in asm
+                .program
+                .chunks_exact(2)
+                .map(|x| u16::from_be_bytes([x[0], x[1]]))
+            {
+                println!("{:#018b}", line);
+            }
         }
         Action::Run => {
             let pc = asm.symbols.get("main").copied().unwrap_or_default();
             let mut state = T::new(pc, asm.program, asm.data);
-            while state.step() != 0 {}
+            while state.step() != 0 {
+                // input("> ");
+            }
         }
     }
     Ok(())

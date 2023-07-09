@@ -1,0 +1,28 @@
+WHITESPACE = _{ " " }
+COMMENT = _{ ";" ~ (!NEWLINE ~ ANY)*}
+
+// alphanumeric identifier
+ident = @{ "$"? ~ (ASCII_ALPHA|"_") ~ (ASCII_ALPHANUMERIC|"_")* }
+num = @{ "0b" ~ ASCII_BIN_DIGIT+ | "0x" ~ ASCII_HEX_DIGIT+ | "-"? ~ ASCII_DIGIT+ }
+// float = @{ ASCII_DIGIT+ ~ "." ~ ASCII_DIGIT+ }
+
+arg = _{ num | ident | full_char | full_string }
+arg_list = _{arg ~ ("," ~ arg)*}
+
+inst = { ident ~ arg_list? }
+
+label = @{ "@" | ident }
+directive = @{ident}
+
+// https://pest.rs/book/examples/rust/literals.html
+// https://pest.rs/book/grammars/built-ins.html
+//string = { "\"" ~ (!("\"" | "\"") ~ ANY)+ ~ "\""}
+
+char = @{ !("\\" | "\"") ~ ASCII | "\\" ~ ("n"|"t"|"\\"|"0"|"\"") }
+string = @{ char* }
+
+full_string = _{ "\"" ~ string ~ "\"" }
+full_char = _{ "'" ~ (char | " ") ~ "'" }
+dir = {"." ~ ident ~ arg_list? }
+line = _{ (label~":")? ~ (inst | dir)? ~ COMMENT? ~ NEWLINE }
+lines = _{ SOI ~ line+ ~ EOI }

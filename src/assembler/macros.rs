@@ -3,28 +3,19 @@ pub struct Macro {
     /// List of arguments.
     args: Vec<String>,
     /// List of instructions.
-    instructions: Vec<String>,
+    body: String,
 }
 
-
 impl Macro {
-
-    pub fn new(args: Vec<String>, instructions: Vec<String>) -> Self {
-        Self {
-            args,
-            instructions,
-        }
+    pub fn new(args: Vec<String>, body: String) -> Self {
+        Self { args, body }
     }
 
-    pub fn expand(&self, values: &[&str]) -> Vec<String> {
-        let mut instructions = Vec::new();
-        for instruction in &self.instructions {
-            let mut instruction = instruction.clone();
-            for (from, to) in self.args.iter().zip(values) {
-                instruction = instruction.replace(&format!("${from}"), to);
-            }
-            instructions.push(instruction);
+    pub fn expand(&self, values: &[&str]) -> String {
+        let mut body = self.body.clone();
+        for (arg, value) in self.args.iter().zip(values) {
+            body = body.replace(&format!("${arg}"), value);
         }
-        instructions
+        body
     }
 }

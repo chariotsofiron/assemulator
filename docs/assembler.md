@@ -47,23 +47,18 @@ Supports decimal, hex, binary, and octal numbers.
 
 ```
 .i8     <expr>[, <expr>, ...]
-        List of bytes, also supports .i16
+        List of bytes, also supports .i16, etc.
 
-.f16    <float>
+.f16    <float>[, <float>, ...]
         parses a 16-bit floating point value
 
 .i8.8   <decimal>[, <decimal>, ...]
         parses a fixed-point value with 8 fractional bits
         rounding to nearest true value.
-        a.b => a+b should be a multiple of 8
+        ia.b => a+b should be a multiple of 8
 
-.align  <expr>
-        Insert as much zero bytes as required to reach an address
-        where <n> low order bits are zero. For example
-        align 2 would make an alignment to the next 32-bit boundary.
-
-.fill   <value>, <n>
-        fills memory with value, n times
+.zero   <count>
+        fills memory with n zeros
 
 .strz   "<string1>"[, "<string2>"...]
         array of null-terminated strings
@@ -71,6 +66,11 @@ Supports decimal, hex, binary, and octal numbers.
 .set    <expression>
         Set the value of the label to <expression>
         These need to be forward declared
+
+.align  <expr>
+        Insert as much zero bytes as required to reach an address
+        where <n> low order bits are zero. For example
+        align 2 would make an alignment to the next 32-bit boundary.
 
 .org    <exp>[,<fill>]
         Sets the address of the current code to exp
@@ -81,11 +81,19 @@ Supports decimal, hex, binary, and octal numbers.
 .endm
         ends a macro definition
 
+.if     <expr>
+        If the expression is true, the following code is assembled
+        until .endif is reached. .else can be used to specify code
+        to assemble if the expression is false.
+
 .include <file>
         Includes the contents of <file> at the current position
-        in the assembly file
-        If label is present, all labels in <file> are prefixed by it
+        in the assembly file. If label is present, all labels in
+        <file> are prefixed with it
 
+
+.fill   
+        Not implemented - what data size to use?
 ```
 
 

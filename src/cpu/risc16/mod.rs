@@ -2,8 +2,8 @@ use super::{Cpu, Token};
 use crate::cpu::reg;
 use crate::port::Port;
 use crate::{port::State, util::mask};
-use opcode::Opcode;
 use core::num::Wrapping;
+use opcode::Opcode;
 pub mod opcode;
 
 pub type Register = reg::Register<8>;
@@ -11,7 +11,7 @@ type Word = u16;
 
 #[derive(Default)]
 pub struct Risc16 {
-    pc: Word,
+    pc: Wrapping<Word>,
     regs: [Wrapping<Word>; 8],
     program: Vec<u16>,
     data: Vec<Word>,
@@ -36,7 +36,7 @@ impl Cpu for Risc16 {
 
     fn new(pc: u64, program: Vec<u8>, data: Vec<u8>) -> Self {
         Risc16 {
-            pc: pc as Word,
+            pc: Wrapping(pc as Word),
             program: program
                 .chunks_exact(2)
                 .map(|x| u16::from_be_bytes([x[0], x[1]]))
@@ -62,7 +62,9 @@ impl Cpu for Risc16 {
             [Op(Lui), Reg(a), Imm(imm)] => fmt3(0b011, a, imm)?,
             [Op(Ld), Reg(a), Reg(b), Imm(c)] => fmt2(0b100, a, b, c)?,
             [Op(St), Reg(a), Reg(b), Imm(c)] => fmt2(0b101, a, b, c)?,
-            [Op(Beq), Reg(a), Reg(b), Imm(c)] => fmt2(0b110, a, b, (c - address as u64) / 2)?,
+            [Op(Beq), Reg(a), Reg(b), Imm(c)] => {
+                fmt2(0b110, a, b, (c.wrapping_sub(address as u64)) / 2)?
+            }
             [Op(Jalr), Reg(a), Reg(b)] => fmt2(0b111, a, b, 0)?,
             ref x => Err(format!("Invalid instruction: {x:?}"))?,
         };
@@ -70,8 +72,7 @@ impl Cpu for Risc16 {
     }
 
     fn step(&mut self) -> usize {
-        // fetch instruction
-        let inst = self.program[usize::from(self.pc)];
+        let inst = self.program[usize::from(self.pc.0)];
         self.pc += 1;
 
         // decode instruction
@@ -80,7 +81,13 @@ impl Cpu for Risc16 {
         let rb = usize::from(inst >> 7 & 0b111);
         let rc = usize::from(inst & 0b111);
         // sign-extend 7-bit immediate
-        let imm = Wrapping((inst & 0x7f ^ 0x40) - 0x40);
+        let imm = Wrapping((inst & 0x7f ^ 0x40).wrapping_sub(0x40));
+
+        // if opcode == 0b001 || opcode == 0b100 || opcode == 0b101 || opcode == 0b110 {
+        //     println!("{}: {:#05b}, r{}, r{}, {}", self.pc.0 - 1, opcode, ra, rb, imm.0);
+        // } else {
+        //     println!("{}, {:#05b}, r{}, r{}, r{}", self.pc.0 - 1, opcode, ra, rb, rc);
+        // }
 
         match opcode {
             // add
@@ -110,17 +117,18 @@ impl Cpu for Risc16 {
             // branch if equal
             0b110 => {
                 if self.regs[ra] == self.regs[rb] {
-                    self.pc = self.pc + imm.0 - Wrapping(1).0;
+                    self.pc = self.pc + imm - Wrapping(1);
                 }
             }
             // jump and link register
             0b111 => {
-                self.regs[ra] = Wrapping(self.pc);
-                self.pc = self.regs[rb].0;
+                self.regs[ra] = self.pc;
+                self.pc = self.regs[rb];
             }
             _ => unreachable!(),
         }
         self.regs[0] = Wrapping(0); // R0 is always 0
-        usize::from(usize::from(self.pc) < self.program.len())
+        // println!("regs: {:?}", self.regs);
+        usize::from(usize::from(self.pc.0) < self.program.len())
     }
 }
