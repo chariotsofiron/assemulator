@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use crate::{cpu::risc16::Risc16, util::input};
+use crate::{assembler::assembler::Assembler, cpu::risc16::Risc16, util::input};
 /// Assembler
 mod assembler;
 /// Colors for screen
@@ -13,7 +13,6 @@ mod port;
 mod screen;
 /// Utility functions
 mod util;
-use assembler::assembler2;
 use clap::Parser;
 use cpu::Cpu;
 
@@ -52,7 +51,7 @@ enum Action {
 /// Run the program
 #[allow(clippy::print_stdout)]
 fn run<T: Cpu>(args: &Args) -> Result<(), String> {
-    let asm = assembler2::Assembler::<T>::assemble(&args.file)?;
+    let asm = Assembler::<T>::assemble(&args.file)?;
 
     println!("Program: {} bytes", asm.program.len());
     println!("Data: {} bytes", asm.data.len());
