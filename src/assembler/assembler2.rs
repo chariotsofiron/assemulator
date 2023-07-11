@@ -31,6 +31,28 @@ fn format_error(pair: &Pair<Rule>, msg: &str) -> String {
     .to_string()
 }
 
+fn interpret_escaped_chars(text: &str) -> String {
+    let mut out = String::new();
+    let mut chars = text.chars();
+    while let Some(c) = chars.next() {
+        if c == '\\' {
+            match chars.next() {
+                Some('n') => out.push('\n'),
+                Some('t') => out.push('\t'),
+                Some('\\') => out.push('\\'),
+                Some('\'') => out.push('\''),
+                Some('\"') => out.push('\"'),
+                Some('0') => out.push('\0'),
+                Some(x) => out.push(x),
+                None => out.push('\\'),
+            }
+        } else {
+            out.push(c);
+        }
+    }
+    out
+}
+
 pub struct Assembler<T> {
     /// The path to the root assembly file.
     path: PathBuf,
@@ -69,8 +91,8 @@ impl<T: Cpu> Assembler<T> {
         U: TryFrom<u64> + Copy,
     {
         let value: u64 = match arg.as_rule() {
-            Rule::num => parse_int(arg.as_str()).map_err(|err| format_error(&arg, &err)),
-            Rule::ident => {
+            Rule::number => parse_int(arg.as_str()).map_err(|err| format_error(&arg, &err)),
+            Rule::identifier => {
                 if second_pass {
                     self.symbols
                         .get(arg.as_str())
@@ -80,24 +102,40 @@ impl<T: Cpu> Assembler<T> {
                     Ok(0)
                 }
             }
-            Rule::char => Ok(u64::from(arg.as_str().chars().next().unwrap())),
+            Rule::character => {
+                let text = interpret_escaped_chars(arg.clone().into_inner().as_str());
+                Ok(u64::from(text.chars().next().unwrap()))
+            }
             _ => Err(format_error(&arg, "Unexpected token")),
         }?;
 
         let n_bits = 8 * std::mem::size_of::<U>();
-        Ok(mask(value, n_bits).unwrap())
+        mask(value, n_bits).map_err(|err| format_error(&arg, &err))
     }
 
-    fn handle_directive(&mut self, pair: Pair<Rule>, second_pass: bool) -> Result<(), String> {
-        let mut pairs = pair.clone().into_inner();
-        let directive = pairs.next().unwrap();
+    fn handle_directive(&mut self, directive: Pair<Rule>, second_pass: bool) -> Result<(), String> {
+        let mut tokens = directive.into_inner();
+        let command = tokens.next().unwrap();
 
-        match directive.as_str() {
+        match command.as_str() {
+            "include" => {
+                let filename = tokens.next().expect("Filename").into_inner().as_str();
+                let filename = self.path.parent().unwrap().join(filename);
+                self.include(&filename, second_pass)?;
+            }
+            "set" => {
+                if second_pass {
+                    let expr = tokens
+                        .next()
+                        .ok_or(format_error(&command, "Expected at least one argument"))?;
+                    self.declare_label(self.parse_expression(expr, second_pass)?)?;
+                }
+            }
             "i8" => {
                 if !second_pass {
                     self.declare_label(self.data.len() as u64)?;
                 }
-                for arg in pairs {
+                for arg in tokens {
                     let value = self.parse_expression::<u8>(arg, second_pass)?;
                     self.data.push(value);
                 }
@@ -106,31 +144,18 @@ impl<T: Cpu> Assembler<T> {
                 if !second_pass {
                     self.declare_label(self.data.len() as u64)?;
                 }
-                for arg in pairs {
+                for arg in tokens {
                     let value = self.parse_expression::<u16>(arg, second_pass)?;
                     self.data.extend(value.to_be_bytes());
-                }
-            }
-            "include" => {
-                let filename = pairs.next().unwrap().as_str();
-                let filename = self.path.parent().unwrap().join(filename);
-                self.include(&filename, second_pass)?;
-            }
-            "set" => {
-                if second_pass {
-                    let expr = pairs
-                        .next()
-                        .ok_or(format_error(&directive, "Expected at least one argument"))?;
-                    self.declare_label(self.parse_expression(expr, second_pass)?)?;
                 }
             }
             "zero" => {
                 if !second_pass {
                     self.declare_label(self.data.len() as u64)?;
                 }
-                let count = pairs
+                let count = tokens
                     .next()
-                    .ok_or(format_error(&directive, "Expected at least one argument"))?;
+                    .ok_or(format_error(&command, "Expected at least one argument"))?;
                 let count = self.parse_expression::<u64>(count, second_pass)?;
                 for _ in 0..count {
                     self.data.push(0);
@@ -140,14 +165,17 @@ impl<T: Cpu> Assembler<T> {
                 if !second_pass {
                     self.declare_label(self.data.len() as u64)?;
                 }
-                let string = pairs
-                    .next()
-                    .ok_or(format_error(&directive, "Missing string"))?;
+                let string = interpret_escaped_chars(
+                    tokens
+                        .next()
+                        .ok_or(format_error(&command, "Missing string"))?
+                        .as_str(),
+                );
 
-                self.data.extend(string.as_str().as_bytes());
+                self.data.extend(string.as_bytes());
                 self.data.push(0);
             }
-            x => return Err(format_error(&directive, &format!("unknown directive: {x}"))),
+            x => return Err(format_error(&command, &format!("unknown directive: {x}"))),
         }
 
         Ok(())
@@ -199,14 +227,11 @@ impl<T: Cpu> Assembler<T> {
     }
 
     /// Expands a macro.
-    fn expand_macro(
-        &mut self,
-        name: &str,
-        args: Pairs<Rule>,
-        second_pass: bool,
-    ) -> Result<(), String> {
-        let args = args.map(|x| x.as_str()).collect::<Vec<_>>();
-        let body = self.macros[name].expand(&args);
+    fn expand_macro(&mut self, args: Pair<Rule>, second_pass: bool) -> Result<(), String> {
+        let mut tokens = args.into_inner().into_iter().map(|x| x.as_str());
+        let opcode = tokens.next().expect("Token");
+        let args = tokens.collect::<Vec<_>>();
+        let body = self.macros[opcode].expand(&args);
         let lines = AsmParser::parse(Rule::lines, &body).map_err(|e| e.to_string())?;
 
         for line in lines {
@@ -220,19 +245,21 @@ impl<T: Cpu> Assembler<T> {
         Ok(())
     }
 
-    fn decode_instruction(
-        &self,
-        opcode: &str,
-        args: Pairs<Rule>,
-        second_pass: bool,
-    ) -> Result<Vec<u8>, String> {
-        let tokens = std::iter::once(Ok(Token::Op(T::Opcode::try_from(opcode)?)))
-            .chain(args.map(|x| match T::Reg::try_from(x.as_str()) {
-                Ok(reg) => Ok(Token::Reg(reg)),
-                Err(_) => self.parse_expression(x, second_pass).map(Token::Imm),
-            }))
-            .collect::<Result<Vec<_>, _>>()?;
-        let bytes = T::parse(tokens, self.program.len())?;
+    fn decode_instruction(&self, arg: Pair<Rule>, second_pass: bool) -> Result<Vec<u8>, String> {
+        let tokens = arg
+            .clone()
+            .into_inner()
+            .map(|x| {
+                if let Ok(opcode) = T::Opcode::try_from(x.as_str()) {
+                    Ok(Token::Op(opcode))
+                } else if let Ok(reg) = T::Reg::try_from(x.as_str()) {
+                    Ok(Token::Reg(reg))
+                } else {
+                    self.parse_expression(x, second_pass).map(Token::Imm)
+                }
+            })
+            .collect::<Result<Vec<_>, String>>()?;
+        let bytes = T::parse(tokens, self.program.len()).map_err(|err| format_error(&arg, &err))?;
         Ok(bytes)
     }
 
@@ -240,20 +267,26 @@ impl<T: Cpu> Assembler<T> {
         match pair.as_rule() {
             Rule::dir => self.handle_directive(pair, second_pass)?,
             Rule::inst => {
-                let mut tokens = pair.into_inner();
-                let opcode = tokens.next().unwrap().as_str();
+                let opcode = pair
+                    .clone()
+                    .into_inner()
+                    .next()
+                    .expect("Expected opcode")
+                    .as_str();
                 if self.macros.contains_key(opcode) {
-                    self.expand_macro(opcode, tokens, second_pass)?;
+                    self.expand_macro(pair, second_pass)?;
                 } else {
                     if !second_pass {
                         self.declare_label(self.program.len() as u64)?;
                     }
                     self.program
-                        .extend(self.decode_instruction(opcode, tokens, second_pass)?);
+                        .extend(self.decode_instruction(pair, second_pass)?);
                 }
             }
             _ => unreachable!(),
         }
+        // the label may not have been reset depending on which pass we're on
+        self.current_label = None;
         Ok(())
     }
 
@@ -278,7 +311,6 @@ impl<T: Cpu> Assembler<T> {
             }
         }
         // if there's a dangling label, treat it as a code label
-
         if !second_pass {
             self.declare_label(self.program.len() as u64)?;
         }

@@ -22,7 +22,12 @@ where
 {
     // Compute up to 2^64 - 1 without overflow
     let mask: u64 = ((1 << (n_bits - 1)) - 1) * 2 + 1;
-    T::try_from(value & mask).map_err(|_err| "Should not trigger".to_owned())
+    if ((value >> 63_i32) == 1 && ((!value).wrapping_add(1) > mask))
+        || ((value >> 63_i32) == 0 && value >= mask)
+    {
+        return Err(format!("Value {value} does not fit in {n_bits} bits"));
+    }
+    T::try_from(value & mask).map_err(|_err| "Invalid mask".to_owned())
 }
 
 /// Parses a string representing an integer.

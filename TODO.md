@@ -35,6 +35,7 @@ TODO v2
 - [ ] include namespaces
 - [ ] anonymous labels
 - [ ] .if directive
+- [ ] align data automatically
 
 e.g.
 

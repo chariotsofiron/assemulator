@@ -1,28 +1,22 @@
-WHITESPACE = _{ " " }
-COMMENT = _{ ";" ~ (!NEWLINE ~ ANY)*}
+space = _{ " "* }
+comment = _{ ";" ~ (!NEWLINE ~ ANY)*}
 
 // alphanumeric identifier
-ident = @{ "$"? ~ (ASCII_ALPHA|"_") ~ (ASCII_ALPHANUMERIC|"_")* }
-num = @{ "0b" ~ ASCII_BIN_DIGIT+ | "0x" ~ ASCII_HEX_DIGIT+ | "-"? ~ ASCII_DIGIT+ }
-// float = @{ ASCII_DIGIT+ ~ "." ~ ASCII_DIGIT+ }
+identifier = @{ "$"? ~ (ASCII_ALPHA|"_") ~ (ASCII_ALPHANUMERIC|"_")* }
+number = @{ "0b" ~ ASCII_BIN_DIGIT+ | "0x" ~ ASCII_HEX_DIGIT+ | "-"? ~ ASCII_DIGIT+ }
 
-arg = _{ num | ident | full_char | full_string }
-arg_list = _{arg ~ ("," ~ arg)*}
-
-inst = { ident ~ arg_list? }
-
-label = @{ "@" | ident }
-directive = @{ident}
-
-// https://pest.rs/book/examples/rust/literals.html
-// https://pest.rs/book/grammars/built-ins.html
-//string = { "\"" ~ (!("\"" | "\"") ~ ANY)+ ~ "\""}
+label = @{ "@" | identifier }
 
 char = @{ !("\\" | "\"") ~ ASCII | "\\" ~ ("n"|"t"|"\\"|"0"|"\"") }
-string = @{ char* }
 
-full_string = _{ "\"" ~ string ~ "\"" }
-full_char = _{ "'" ~ (char | " ") ~ "'" }
-dir = {"." ~ ident ~ arg_list? }
-line = _{ (label~":")? ~ (inst | dir)? ~ COMMENT? ~ NEWLINE }
+string = { "\"" ~ char* ~ "\"" }
+character = { "'" ~ char ~ "'" }
+
+arg = _{ identifier | number | character | string }
+arg_list = _{arg ~ (space ~ "," ~ space ~ arg)*}
+
+dir = {"." ~ identifier ~ space ~ arg_list? }
+inst = { identifier ~ space ~ arg_list? }
+
+line = _{ (label ~ ":")? ~ space ~ (inst | dir)? ~ space ~ comment? ~ NEWLINE }
 lines = _{ SOI ~ line+ ~ EOI }

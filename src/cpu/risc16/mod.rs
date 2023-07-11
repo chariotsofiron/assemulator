@@ -22,6 +22,15 @@ fn fmt1(op: u16, a: Register, b: Register, c: Register) -> u16 {
     op << 13 | (a.0 as u16) << 10 | (b.0 as u16) << 7 | (c.0 as u16)
 }
 
+fn memory(op: u16, a: Register, b: Register, imm: u64) -> Result<u16, String> {
+    // if the address could be interpreted as a port after halving, then don't halve it
+    let imm = match Port::try_from((imm / 2) as usize) {
+        Ok(_) => imm,
+        Err(_) => ((imm as i64) / 2) as u64,
+    };
+    Ok(op << 13 | (a.0 as u16) << 10 | (b.0 as u16) << 7 | mask::<u16>(imm, 7)?)
+}
+
 fn fmt2(op: u16, a: Register, b: Register, imm: u64) -> Result<u16, String> {
     Ok(op << 13 | (a.0 as u16) << 10 | (b.0 as u16) << 7 | mask::<u16>(imm, 7)?)
 }
@@ -60,11 +69,14 @@ impl Cpu for Risc16 {
             [Op(Add), Reg(a), Reg(b), Imm(c)] => fmt2(0b001, a, b, c)?,
             [Op(Nand), Reg(a), Reg(b), Reg(c)] => fmt1(0b010, a, b, c),
             [Op(Lui), Reg(a), Imm(imm)] => fmt3(0b011, a, imm)?,
-            [Op(Ld), Reg(a), Reg(b), Imm(c)] => fmt2(0b100, a, b, c)?,
-            [Op(St), Reg(a), Reg(b), Imm(c)] => fmt2(0b101, a, b, c)?,
-            [Op(Beq), Reg(a), Reg(b), Imm(c)] => {
-                fmt2(0b110, a, b, (c.wrapping_sub(address as u64)) / 2)?
-            }
+            [Op(Ld), Reg(a), Reg(b), Imm(c)] => memory(0b100, a, b, c)?,
+            [Op(St), Reg(a), Reg(b), Imm(c)] => memory(0b101, a, b, c)?,
+            [Op(Beq), Reg(a), Reg(b), Imm(c)] => fmt2(
+                0b110,
+                a,
+                b,
+                (((c.wrapping_sub(address as u64)) as i64) / 2) as u64,
+            )?,
             [Op(Jalr), Reg(a), Reg(b)] => fmt2(0b111, a, b, 0)?,
             ref x => Err(format!("Invalid instruction: {x:?}"))?,
         };
@@ -72,6 +84,9 @@ impl Cpu for Risc16 {
     }
 
     fn step(&mut self) -> usize {
+        if usize::from(self.pc.0) >= self.program.len() {
+            return 0;
+        }
         let inst = self.program[usize::from(self.pc.0)];
         self.pc += 1;
 
@@ -128,7 +143,7 @@ impl Cpu for Risc16 {
             _ => unreachable!(),
         }
         self.regs[0] = Wrapping(0); // R0 is always 0
-        // println!("regs: {:?}", self.regs);
+                                    // println!("regs: {:?}", self.regs);
         usize::from(usize::from(self.pc.0) < self.program.len())
     }
 }
