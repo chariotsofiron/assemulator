@@ -22,14 +22,14 @@ fn fmt1(op: u16, a: Register, b: Register, c: Register) -> u16 {
     op << 13 | (a.0 as u16) << 10 | (b.0 as u16) << 7 | (c.0 as u16)
 }
 
-fn memory(op: u16, a: Register, b: Register, imm: u64) -> Result<u16, String> {
-    // if the address could be interpreted as a port after halving, then don't halve it
-    let imm = match Port::try_from((imm / 2) as usize) {
-        Ok(_) => imm,
-        Err(_) => ((imm as i64) / 2) as u64,
-    };
-    Ok(op << 13 | (a.0 as u16) << 10 | (b.0 as u16) << 7 | mask::<u16>(imm, 7)?)
-}
+// fn memory(op: u16, a: Register, b: Register, imm: u64) -> Result<u16, String> {
+//     // if the address could be interpreted as a port after halving, then don't halve it
+//     let imm = match Port::try_from((imm / 2) as usize) {
+//         Ok(_) => imm,
+//         Err(_) => ((imm as i64) / 2) as u64,
+//     };
+//     Ok(op << 13 | (a.0 as u16) << 10 | (b.0 as u16) << 7 | mask::<u16>(imm, 7)?)
+// }
 
 fn fmt2(op: u16, a: Register, b: Register, imm: u64) -> Result<u16, String> {
     Ok(op << 13 | (a.0 as u16) << 10 | (b.0 as u16) << 7 | mask::<u16>(imm, 7)?)
@@ -69,8 +69,10 @@ impl Cpu for Risc16 {
             [Op(Add), Reg(a), Reg(b), Imm(c)] => fmt2(0b001, a, b, c)?,
             [Op(Nand), Reg(a), Reg(b), Reg(c)] => fmt1(0b010, a, b, c),
             [Op(Lui), Reg(a), Imm(imm)] => fmt3(0b011, a, imm)?,
-            [Op(Ld), Reg(a), Reg(b), Imm(c)] => memory(0b100, a, b, c)?,
-            [Op(St), Reg(a), Reg(b), Imm(c)] => memory(0b101, a, b, c)?,
+            [Op(Ld), Reg(a), Reg(b), Imm(c)] if b.0 == 0 => fmt2(0b100, a, b, c)?,
+            [Op(Ld), Reg(a), Reg(b), Imm(c)] => fmt2(0b100, a, b, c / 2)?,
+            [Op(St), Reg(a), Reg(b), Imm(c)] if b.0 == 0 => fmt2(0b101, a, b, c)?,
+            [Op(St), Reg(a), Reg(b), Imm(c)] => fmt2(0b101, a, b, c / 2)?,
             [Op(Beq), Reg(a), Reg(b), Imm(c)] => fmt2(
                 0b110,
                 a,
@@ -97,6 +99,7 @@ impl Cpu for Risc16 {
         let rc = usize::from(inst & 0b111);
         // sign-extend 7-bit immediate
         let imm = Wrapping((inst & 0x7f ^ 0x40).wrapping_sub(0x40));
+        let addr = (self.regs[rb] + imm).0;
 
         // if opcode == 0b001 || opcode == 0b100 || opcode == 0b101 || opcode == 0b110 {
         //     println!("{}: {:#05b}, r{}, r{}, {}", self.pc.0 - 1, opcode, ra, rb, imm.0);
@@ -113,21 +116,23 @@ impl Cpu for Risc16 {
             0b010 => self.regs[ra] = !(self.regs[rb] & self.regs[rc]),
             // load upper immediate
             0b011 => self.regs[ra] = Wrapping(inst << 6),
-            // load
-            0b100 => {
-                let addr = (self.regs[rb] + imm).0;
-                self.regs[ra] = match Port::try_from(usize::from(addr)) {
-                    Ok(addr) => Wrapping(self.ports.read_port(addr)),
-                    Err(_) => Wrapping(self.data[usize::from(addr)]),
-                }
+            // port load
+            0b100 if rb == 0 => {
+                let port = Port::try_from(usize::from(addr)).expect("invalid port");
+                self.regs[ra] = Wrapping(self.ports.read_port(port));
             }
-            // store
+            // memory load
+            0b100 => {
+                self.regs[ra] = Wrapping(self.data[usize::from(addr)]);
+            }
+            // port store
+            0b101 if rb == 0 => {
+                let port = Port::try_from(usize::from(addr)).expect("invalid port");
+                self.ports.write_port(port, self.regs[ra].0);
+            }
+            // memory store
             0b101 => {
-                let addr = (self.regs[rb] + imm).0;
-                match Port::try_from(usize::from(addr)) {
-                    Ok(addr) => self.ports.write_port(addr, self.regs[ra].0),
-                    Err(_) => self.data[usize::from(addr)] = self.regs[ra].0,
-                }
+                self.data[usize::from(addr)] = self.regs[ra].0;
             }
             // branch if equal
             0b110 => {

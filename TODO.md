@@ -10,6 +10,7 @@
 - [x] opcode for token enum should be generic
 - [x] anonymous labels
 - [ ] macros
+- [ ] only display screen if we draw to it
 - [ ] Step simulation / debugger
 - [ ] Function scopes with `{}`
 - [ ] Output to logisim

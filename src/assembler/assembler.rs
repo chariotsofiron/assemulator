@@ -237,7 +237,7 @@ impl<T: Cpu> Assembler<T> {
         for line in lines {
             match line.as_rule() {
                 Rule::label => self.current_label = Some(line.as_str().to_owned()),
-                Rule::dir | Rule::inst => self.parse_line(line, second_pass)?,
+                Rule::directive | Rule::inst => self.parse_line(line, second_pass)?,
                 Rule::EOI => {}
                 _ => unreachable!(),
             }
@@ -265,7 +265,7 @@ impl<T: Cpu> Assembler<T> {
 
     fn parse_line(&mut self, pair: Pair<Rule>, second_pass: bool) -> Result<(), String> {
         match pair.as_rule() {
-            Rule::dir => self.handle_directive(pair, second_pass)?,
+            Rule::directive => self.handle_directive(pair, second_pass)?,
             Rule::inst => {
                 let opcode = pair
                     .clone()
@@ -298,14 +298,14 @@ impl<T: Cpu> Assembler<T> {
         while let Some(pair) = lines.next() {
             match pair.as_rule() {
                 Rule::label => self.current_label = Some(pair.as_str().to_owned()),
-                Rule::dir if pair.as_str().starts_with(".macro") => {
+                Rule::directive if pair.as_str().starts_with(".macro") => {
                     let mac = self.parse_macro(pair, &mut lines)?;
                     if !second_pass {
                         self.declare_macro(mac)?;
                     }
                     self.current_label = None;
                 }
-                Rule::dir | Rule::inst => self.parse_line(pair, second_pass)?,
+                Rule::directive | Rule::inst => self.parse_line(pair, second_pass)?,
                 Rule::EOI => {}
                 _ => unreachable!(),
             }

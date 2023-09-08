@@ -13,7 +13,7 @@ const HEIGHT: usize = 64 * SIZE_PX;
 /// Frames per second.
 const FPS: u64 = 30;
 /// The time between frames.
-const MILLIS_HZ: core::time::Duration = core::time::Duration::from_millis(1000 / FPS);
+const MILLIS_HZ: std::time::Duration = std::time::Duration::from_millis(1000 / FPS);
 
 /// Double-buffered screen.
 /// We write to the buffer first, then copy to the screen.

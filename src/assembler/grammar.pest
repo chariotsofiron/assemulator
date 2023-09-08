@@ -15,8 +15,8 @@ character = { "'" ~ char ~ "'" }
 arg = _{ identifier | number | character | string }
 arg_list = _{arg ~ (space ~ "," ~ space ~ arg)*}
 
-dir = {"." ~ identifier ~ space ~ arg_list? }
+directive = {"." ~ identifier ~ space ~ arg_list? }
 inst = { identifier ~ space ~ arg_list? }
 
-line = _{ (label ~ ":")? ~ space ~ (inst | dir)? ~ space ~ comment? ~ NEWLINE }
+line = _{ (label ~ ":")? ~ space ~ (inst | directive)? ~ space ~ comment? ~ NEWLINE }
 lines = _{ SOI ~ line+ ~ EOI }
