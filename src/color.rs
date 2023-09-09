@@ -1,5 +1,6 @@
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub enum Color {
+    #[default]
     Black,
     White,
     DarkBlue,
@@ -16,12 +17,6 @@ pub enum Color {
     Lavender,
     Pink,
     LightPeach,
-}
-
-impl Default for Color {
-    fn default() -> Self {
-        Color::Black
-    }
 }
 
 impl From<Color> for u8 {
@@ -72,7 +67,7 @@ impl From<u8> for Color {
 }
 
 impl Color {
-    pub fn to_rgb(&self) -> (u8, u8, u8) {
+    pub fn to_rgb(self) -> (u8, u8, u8) {
         match self {
             Color::Black => (0, 0, 0),
             Color::White => (255, 241, 232),

@@ -85,3 +85,10 @@ Data: 0 bytes
 # Limitations
 
 - Can't dynamically pick an instruction based on size of immediate
+
+
+## Linting
+
+```bash
+cargo clippy -- -W clippy::all -W clippy::pedantic -W clippy::nursery
+```

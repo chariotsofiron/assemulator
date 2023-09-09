@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use crate::{assembler::assembler::Assembler, cpu::risc16::Risc16, util::input};
+use crate::{assembler::Assembler, cpu::risc16::Risc16};
 mod assembler;
 mod color;
 mod cpu;
