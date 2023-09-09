@@ -10,7 +10,6 @@ use pest::{
     iterators::{Pair, Pairs},
     Parser,
 };
-use pest_derive::Parser;
 use std::{
     collections::HashMap,
     path::{Path, PathBuf},
@@ -18,7 +17,7 @@ use std::{
 use strum::IntoEnumIterator;
 
 /// Pest parser for the assembler.
-#[derive(Parser)]
+#[derive(pest_derive::Parser)]
 #[grammar = "./src/assembler/grammar.pest"]
 struct AsmParser;
 
@@ -204,27 +203,29 @@ impl<T: Cpu> Assembler<T> {
         Ok(())
     }
 
-    fn parse_macro(pair: Pair<Rule>, lines: &mut Pairs<Rule>) -> Result<Macro, String> {
-        let args = pair.into_inner().skip(1);
-        let mut text = String::new();
+    fn parse_macro(pair: Pair<Rule>, lines: &mut Pairs<Rule>) -> Macro {
+        let mut body = String::new();
         for pair in lines {
             let line = pair.as_str();
             if line.trim().starts_with(".endm") {
                 break;
             }
-            text.push_str(line);
-            text.push('\n');
+            body.push_str(line);
+            body.push('\n');
         }
 
-        let args2: Vec<_> = args.map(|x| x.as_str().to_owned()).collect::<Vec<_>>();
-        let mac = Macro::new(args2, text);
-        Ok(mac)
+        let args: Vec<_> = pair
+            .into_inner()
+            .skip(1)
+            .map(|x| x.as_str().to_owned())
+            .collect();
+        Macro::new(args, body)
     }
 
     /// Expands a macro.
     fn expand_macro(&mut self, args: Pair<Rule>, second_pass: bool) -> Result<(), String> {
         let mut tokens = args.into_inner().map(|x| x.as_str());
-        let opcode = tokens.next().expect("Token");
+        let opcode = tokens.next().unwrap();
         let args = tokens.collect::<Vec<_>>();
         let body = self.macros[opcode].expand(&args);
         let lines = AsmParser::parse(Rule::lines, &body).map_err(|e| e.to_string())?;
@@ -293,12 +294,13 @@ impl<T: Cpu> Assembler<T> {
     fn include(&mut self, filename: &Path, second_pass: bool) -> Result<(), String> {
         let mut text = std::fs::read_to_string(filename).expect("Failed to read file.");
         text.push('\n'); // add newline to fix pest grammar issue
+
         let mut lines = AsmParser::parse(Rule::lines, &text).map_err(|e| e.to_string())?;
         while let Some(pair) = lines.next() {
             match pair.as_rule() {
                 Rule::label => self.current_label = Some(pair.as_str().to_owned()),
                 Rule::directive if pair.as_str().starts_with(".macro") => {
-                    let mac = Self::parse_macro(pair, &mut lines)?;
+                    let mac = Self::parse_macro(pair, &mut lines);
                     if !second_pass {
                         self.declare_macro(mac)?;
                     }

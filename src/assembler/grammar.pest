@@ -5,7 +5,7 @@ comment = _{ ";" ~ (!NEWLINE ~ ANY)*}
 identifier = @{ "$"? ~ (ASCII_ALPHA|"_") ~ (ASCII_ALPHANUMERIC|"_")* }
 number = @{ "0b" ~ ASCII_BIN_DIGIT+ | "0x" ~ ASCII_HEX_DIGIT+ | "-"? ~ ASCII_DIGIT+ }
 
-label = @{ "@" | identifier }
+label = @{ identifier }
 
 char = @{ !("\\" | "\"") ~ ASCII | "\\" ~ ("n"|"t"|"\\"|"0"|"\"") }
 
@@ -13,9 +13,9 @@ string = { "\"" ~ char* ~ "\"" }
 character = { "'" ~ char ~ "'" }
 
 arg = _{ identifier | number | character | string }
-arg_list = _{arg ~ (space ~ "," ~ space ~ arg)*}
+arg_list = _{ arg ~ (space ~ "," ~ space ~ arg)* }
 
-directive = {"." ~ identifier ~ space ~ arg_list? }
+directive = { "." ~ identifier ~ space ~ arg_list? }
 inst = { identifier ~ space ~ arg_list? }
 
 line = _{ (label ~ ":")? ~ space ~ (inst | directive)? ~ space ~ comment? ~ NEWLINE }
