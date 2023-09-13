@@ -9,7 +9,9 @@
 - [x] add support for graphics
 - [x] opcode for token enum should be generic
 - [x] anonymous labels
-- [ ] macros
+- [x] macros
+- [x] includes
+- [ ] add label prefix for includes
 - [ ] only display screen if we draw to it
 - [ ] Step simulation / debugger
 - [ ] Function scopes with `{}`
