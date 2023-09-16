@@ -24,7 +24,7 @@ pub struct Screen {
     /// The screen
     screen: [Color; WIDTH * HEIGHT],
     /// The window
-    window: Window,
+    // window: Window,
 
     /// Time of last draw, used for managing FPS.
     last_draw: std::time::Instant,
@@ -35,7 +35,7 @@ impl Default for Screen {
         Self {
             buffer: [Color::Black; WIDTH * HEIGHT],
             screen: [Color::Black; WIDTH * HEIGHT],
-            window: Window::new("Assemulator", WIDTH, HEIGHT, WindowOptions::default()).unwrap(),
+            // window: Window::new("Assemulator", WIDTH, HEIGHT, WindowOptions::default()).unwrap(),
             last_draw: std::time::Instant::now(),
         }
     }
@@ -74,34 +74,34 @@ impl Screen {
     /// Returns the state of the buttons.
     pub fn buttons(&self) -> u8 {
         let mut buttons = 0;
-        for key in self.window.get_keys() {
-            match key {
-                minifb::Key::Up => buttons |= 1,
-                minifb::Key::Down => buttons |= 2,
-                minifb::Key::Left => buttons |= 4,
-                minifb::Key::Right => buttons |= 8,
-                minifb::Key::Z => buttons |= 16,
-                minifb::Key::X => buttons |= 32,
-                _ => {}
-            }
-        }
+        // for key in self.window.get_keys() {
+        //     match key {
+        //         minifb::Key::Up => buttons |= 1,
+        //         minifb::Key::Down => buttons |= 2,
+        //         minifb::Key::Left => buttons |= 4,
+        //         minifb::Key::Right => buttons |= 8,
+        //         minifb::Key::Z => buttons |= 16,
+        //         minifb::Key::X => buttons |= 32,
+        //         _ => {}
+        //     }
+        // }
         buttons
     }
 
     /// Returns the state of the buttons, but only the first read.
     pub fn buttonsp(&self) -> u8 {
         let mut buttons = 0;
-        for key in self.window.get_keys_pressed(minifb::KeyRepeat::No) {
-            match key {
-                minifb::Key::Up => buttons |= 1,
-                minifb::Key::Down => buttons |= 2,
-                minifb::Key::Left => buttons |= 4,
-                minifb::Key::Right => buttons |= 8,
-                minifb::Key::Z => buttons |= 16,
-                minifb::Key::X => buttons |= 32,
-                _ => {}
-            }
-        }
+        // for key in self.window.get_keys_pressed(minifb::KeyRepeat::No) {
+        //     match key {
+        //         minifb::Key::Up => buttons |= 1,
+        //         minifb::Key::Down => buttons |= 2,
+        //         minifb::Key::Left => buttons |= 4,
+        //         minifb::Key::Right => buttons |= 8,
+        //         minifb::Key::Z => buttons |= 16,
+        //         minifb::Key::X => buttons |= 32,
+        //         _ => {}
+        //     }
+        // }
         buttons
     }
 
@@ -109,19 +109,19 @@ impl Screen {
     pub fn draw(&mut self) {
         self.screen = self.buffer;
         self.wait_for_frame();
-        let (width, height) = self.window.get_size();
+        // let (width, height) = self.window.get_size();
 
-        let buffer = self
-            .buffer
-            .iter()
-            .map(|&x| {
-                let (r, g, b) = x.to_rgb();
-                u32::from_be_bytes([0, r, g, b])
-            })
-            .collect::<Vec<_>>();
-        self.window
-            .update_with_buffer(&buffer, width, height)
-            .unwrap();
+        // let buffer = self
+        //     .buffer
+        //     .iter()
+        //     .map(|&x| {
+        //         let (r, g, b) = x.to_rgb();
+        //         u32::from_be_bytes([0, r, g, b])
+        //     })
+        //     .collect::<Vec<_>>();
+        // self.window
+        //     .update_with_buffer(&buffer, width, height)
+        //     .unwrap();
     }
 
     /// Draws the buffer to the screen and clear the buffer.
@@ -134,9 +134,9 @@ impl Screen {
 impl Drop for Screen {
     fn drop(&mut self) {
         // keep the screen open if anything was written to it
-        while self.window.is_open() && self.buffer.iter().any(|&x| x != Color::Black) {
-            self.draw();
-            std::thread::sleep(Duration::from_millis(100));
-        }
+        // while self.window.is_open() && self.buffer.iter().any(|&x| x != Color::Black) {
+        //     self.draw();
+        //     std::thread::sleep(Duration::from_millis(100));
+        // }
     }
 }

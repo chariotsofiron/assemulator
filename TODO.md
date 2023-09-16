@@ -10,6 +10,7 @@
 - [x] opcode for token enum should be generic
 - [x] anonymous labels
 - [x] macros
+- [x] implement multi-instruction pseudo-ops for some architectures as macros
 - [x] includes
 - [ ] add label prefix for includes
 - [ ] only display screen if we draw to it
@@ -19,9 +20,7 @@
 - [ ] implement forwarding/hazard logic
     - how to do this in a generic way?
 - [ ] fixed-point constants (i0.8, i5.3, i8.16, i32.32, etc.)
-- [ ] include files
 - [ ] evaluate math expressions e.g. `table + arr[2+str]`
-- [ ] implement multi-instruction pseudo-ops for some architectures as macros
 - [ ] implement symbols for ports which need to be CPU-defined
 - [ ] CPU interrupts
 
