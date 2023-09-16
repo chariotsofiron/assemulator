@@ -114,11 +114,29 @@ impl<T: Cpu> Assembler<T> {
         mask(value, n_bits).map_err(|err| format_error(&arg, &err))
     }
 
-    fn handle_directive(&mut self, directive: Pair<Rule>, second_pass: bool) -> Result<(), String> {
+    /// Takes lines for multi-line directives (macro, if)
+    fn handle_directive(
+        &mut self,
+        directive: Pair<Rule>,
+        second_pass: bool,
+        lines: &mut Pairs<Rule>,
+    ) -> Result<(), String> {
         let mut tokens = directive.into_inner();
         let command = tokens.next().unwrap();
 
         match command.as_str() {
+            "macro" => {
+                let body: String = lines
+                    .take_while(|x| x.as_str().trim() != ".endm")
+                    .map(|x| format!("{}\n", x.as_str()))
+                    .collect();
+
+                if !second_pass {
+                    let args = tokens.map(|x| x.as_str().to_owned()).collect::<Vec<_>>();
+                    let mac = Macro::new(args, body);
+                    self.declare_macro(mac)?;
+                }
+            }
             "include" => {
                 let filename = tokens.next().expect("Filename").into_inner().as_str();
                 let filename = self.path.parent().unwrap().join(filename);
@@ -172,13 +190,11 @@ impl<T: Cpu> Assembler<T> {
                         .ok_or(format_error(&command, "Missing string"))?
                         .as_str(),
                 );
-
                 self.data.extend(string.as_bytes());
                 self.data.push(0);
             }
             x => return Err(format_error(&command, &format!("unknown directive: {x}"))),
         }
-
         Ok(())
     }
 
@@ -203,41 +219,15 @@ impl<T: Cpu> Assembler<T> {
         Ok(())
     }
 
-    fn parse_macro(pair: Pair<Rule>, lines: &mut Pairs<Rule>) -> Macro {
-        let mut body = String::new();
-        for pair in lines {
-            let line = pair.as_str();
-            if line.trim().starts_with(".endm") {
-                break;
-            }
-            body.push_str(line);
-            body.push('\n');
-        }
-
-        let args: Vec<_> = pair
-            .into_inner()
-            .skip(1)
-            .map(|x| x.as_str().to_owned())
-            .collect();
-        Macro::new(args, body)
-    }
-
     /// Expands a macro.
     fn expand_macro(&mut self, args: Pair<Rule>, second_pass: bool) -> Result<(), String> {
         let mut tokens = args.into_inner().map(|x| x.as_str());
         let opcode = tokens.next().unwrap();
         let args = tokens.collect::<Vec<_>>();
         let body = self.macros[opcode].expand(&args);
-        let lines = AsmParser::parse(Rule::lines, &body).map_err(|e| e.to_string())?;
 
-        for line in lines {
-            match line.as_rule() {
-                Rule::label => self.current_label = Some(line.as_str().to_owned()),
-                Rule::directive | Rule::inst => self.parse_line(line, second_pass)?,
-                Rule::EOI => {}
-                _ => unreachable!(),
-            }
-        }
+        let mut lines = AsmParser::parse(Rule::lines, &body).map_err(|e| e.to_string())?;
+        self.parse_line(second_pass, &mut lines)?;
         Ok(())
     }
 
@@ -259,30 +249,36 @@ impl<T: Cpu> Assembler<T> {
         Ok(bytes)
     }
 
-    fn parse_line(&mut self, pair: Pair<Rule>, second_pass: bool) -> Result<(), String> {
-        match pair.as_rule() {
-            Rule::directive => self.handle_directive(pair, second_pass)?,
-            Rule::inst => {
-                let opcode = pair
-                    .clone()
-                    .into_inner()
-                    .next()
-                    .expect("Expected opcode")
-                    .as_str();
-                if self.macros.contains_key(opcode) {
-                    self.expand_macro(pair, second_pass)?;
-                } else {
-                    if !second_pass {
-                        self.declare_label(self.program.len() as u64)?;
-                    }
-                    self.program
-                        .extend(self.decode_instruction(pair, second_pass)?);
+    fn parse_line(&mut self, second_pass: bool, lines: &mut Pairs<Rule>) -> Result<(), String> {
+        while let Some(pair) = lines.next() {
+            match pair.as_rule() {
+                Rule::label => self.current_label = Some(pair.as_str().to_owned()),
+                Rule::directive => {
+                    self.handle_directive(pair, second_pass, lines)?;
+                    self.current_label = None;
                 }
+                Rule::inst => {
+                    let opcode = pair
+                        .clone()
+                        .into_inner()
+                        .next()
+                        .expect("Expected opcode")
+                        .as_str();
+                    if self.macros.contains_key(opcode) {
+                        self.expand_macro(pair, second_pass)?;
+                    } else {
+                        if !second_pass {
+                            self.declare_label(self.program.len() as u64)?;
+                        }
+                        self.program
+                            .extend(self.decode_instruction(pair, second_pass)?);
+                    }
+                    self.current_label = None;
+                }
+                Rule::EOI => {}
+                _ => unreachable!(),
             }
-            _ => unreachable!(),
         }
-        // the label may not have been reset depending on which pass we're on
-        self.current_label = None;
         Ok(())
     }
 
@@ -296,21 +292,7 @@ impl<T: Cpu> Assembler<T> {
         text.push('\n'); // add newline to fix pest grammar issue
 
         let mut lines = AsmParser::parse(Rule::lines, &text).map_err(|e| e.to_string())?;
-        while let Some(pair) = lines.next() {
-            match pair.as_rule() {
-                Rule::label => self.current_label = Some(pair.as_str().to_owned()),
-                Rule::directive if pair.as_str().starts_with(".macro") => {
-                    let mac = Self::parse_macro(pair, &mut lines);
-                    if !second_pass {
-                        self.declare_macro(mac)?;
-                    }
-                    self.current_label = None;
-                }
-                Rule::directive | Rule::inst => self.parse_line(pair, second_pass)?,
-                Rule::EOI => {}
-                _ => unreachable!(),
-            }
-        }
+        self.parse_line(second_pass, &mut lines)?;
         // if there's a dangling label, treat it as a code label
         if !second_pass {
             self.declare_label(self.program.len() as u64)?;
