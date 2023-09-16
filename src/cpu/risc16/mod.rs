@@ -80,7 +80,7 @@ impl Cpu for Risc16 {
                 (((c.wrapping_sub(address as u64)) as i64) / 2) as u64,
             )?,
             [Op(Jalr), Reg(a), Reg(b)] => fmt2(0b111, a, b, 0)?,
-            ref x => Err(format!("Invalid instruction: {x:?}"))?,
+            _ => Err("invalid instruction")?,
         };
         Ok(instruction.to_be_bytes().to_vec())
     }
