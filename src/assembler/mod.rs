@@ -10,10 +10,8 @@ use pest::{
     iterators::{Pair, Pairs},
     Parser,
 };
-use std::{
-    collections::{HashMap, HashSet},
-    path::{Path, PathBuf},
-};
+use std::collections::HashMap;
+use std::path::{Path, PathBuf};
 use strum::IntoEnumIterator;
 
 /// Pest parser for the assembler.
@@ -55,8 +53,6 @@ fn interpret_escaped_chars(text: &str) -> String {
 }
 
 pub struct Assembler<T> {
-    /// The set of files that have been included.
-    included: HashSet<PathBuf>,
     /// The path to the root assembly file.
     path: PathBuf,
     current_label: Option<String>,
@@ -74,7 +70,6 @@ impl<T: Cpu> Assembler<T> {
             .collect();
 
         let mut asm = Self {
-            included: HashSet::new(),
             path: path.to_owned(),
             current_label: None,
             program: Vec::new(),
@@ -86,7 +81,6 @@ impl<T: Cpu> Assembler<T> {
         asm.include(path, false)?;
         asm.data.clear();
         asm.program.clear();
-        asm.included.clear();
         asm.include(path, true)?;
         Ok(asm)
     }
@@ -292,11 +286,8 @@ impl<T: Cpu> Assembler<T> {
     /// The first pass will declare all labels and macros
     /// The second pass will generate the assembly.
     fn include(&mut self, filename: &Path, second_pass: bool) -> Result<(), String> {
-        if self.included.contains(filename) {
-            return Ok(());
-        }
-        self.included.insert(filename.to_owned());
-        let mut text = std::fs::read_to_string(filename).expect("Failed to read file.");
+        let mut text = std::fs::read_to_string(filename)
+            .map_err(|_| format!("Failed to read {}", filename.display()))?;
         text.push('\n'); // add newline to fix pest grammar issue
 
         let mut lines = AsmParser::parse(Rule::lines, &text).map_err(|e| e.to_string())?;

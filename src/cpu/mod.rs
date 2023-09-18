@@ -29,7 +29,7 @@ pub trait Cpu: Default {
 
     /// Parses a list of tokens into a list of bytes.
     /// Passes in the address that this instruction will be at
-    /// 
+    ///
     /// Important: don't generate different length instruction
     /// based on size of immediate.
     ///
