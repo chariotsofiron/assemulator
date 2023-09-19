@@ -1,12 +1,8 @@
-use super::{Cpu, Token};
-use crate::cpu::reg;
-use crate::port::Port;
-use crate::{port::State, util::mask};
-use core::num::Wrapping;
-use opcode::Opcode;
-pub mod opcode;
+use crate::opcode::Opcode;
+use assemulator::{mask, Cpu, Port, State, Token};
+use std::num::Wrapping;
 
-pub type Register = reg::Register<8>;
+type Register = assemulator::Register<8>;
 type Word = u16;
 
 #[derive(Default)]
@@ -148,7 +144,6 @@ impl Cpu for Risc16 {
             _ => unreachable!(),
         }
         self.regs[0] = Wrapping(0); // R0 is always 0
-                                    // println!("regs: {:?}", self.regs);
         usize::from(usize::from(self.pc.0) < self.program.len())
     }
 }

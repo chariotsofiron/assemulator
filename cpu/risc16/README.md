@@ -18,7 +18,6 @@ jalr
 ```
 
 
-
 ## Calling convention
 
 ```c

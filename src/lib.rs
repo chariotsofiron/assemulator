@@ -1,36 +1,30 @@
-use std::path::PathBuf;
-
-use crate::{assembler::Assembler, cpu::risc16::Risc16};
 mod assembler;
 mod color;
 mod cpu;
 mod port;
 mod screen;
 mod util;
-use clap::Parser;
-use cpu::Cpu;
+mod reg;
 
-/// Simple program to greet a person
+pub use cpu::{Cpu, Token};
+pub use reg::Register;
+pub use port::{State, Port};
+pub use util::mask;
+
+
+use assembler::Assembler;
+use clap::Parser;
+use std::path::PathBuf;
+
 #[derive(Parser)]
 #[command(about = "Instruction set simulator")]
 struct Args {
-    /// The processor to use
-    #[arg(value_enum)]
-    processor: Processor,
-
     /// Action
     #[command(subcommand)]
     action: Action,
 
     /// Input file
     file: PathBuf,
-}
-
-/// The supported CPUs
-#[derive(clap::ValueEnum, Clone)]
-enum Processor {
-    /// Risc16 CPU
-    Risc16,
 }
 
 /// Actions that can be performed
@@ -44,7 +38,7 @@ enum Action {
 
 /// Run the program
 #[allow(clippy::print_stdout)]
-fn run<T: Cpu>(args: &Args) -> Result<(), String> {
+fn run2<T: Cpu>(args: &Args) -> Result<(), String> {
     let asm = Assembler::<T>::assemble(&args.file)?;
 
     println!("Program: {} bytes", asm.program.len());
@@ -76,12 +70,9 @@ fn run<T: Cpu>(args: &Args) -> Result<(), String> {
     Ok(())
 }
 
-fn main() {
+pub fn run<T: Cpu>() {
     let args = Args::parse();
-    match args.processor {
-        Processor::Risc16 => run::<Risc16>(&args),
-    }
-    .unwrap_or_else(|e| {
+    run2::<T>(&args).unwrap_or_else(|e| {
         eprintln!("{e}");
         std::process::exit(1);
     });

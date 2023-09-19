@@ -13,3 +13,7 @@ strum = "0.24"
 strum_macros = "0.24"
 pest = "2.7.0"
 pest_derive = "2.4.0"
+
+[[bin]]
+path = "cpu/risc16/main.rs"
+name = "risc16"

@@ -1,6 +1,3 @@
-mod reg;
-pub mod risc16;
-
 /// A token from the assembler
 /// Register type is to be specified by the CPU.
 /// This is better than an integer because we can have custom names for registers
