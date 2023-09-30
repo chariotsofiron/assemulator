@@ -20,3 +20,7 @@ sub:    .macro dest, src1, src2
         add $dest, $dest, 1             ; add 1 to src2
         add $dest, $dest, $src1         ; add src1 to src2
         .endm
+
+print:  .macro src
+        st $src, r0, ticker
+        .endm

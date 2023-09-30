@@ -1,3 +1,4 @@
+mod expression;
 mod macros;
 
 use crate::{
@@ -85,22 +86,13 @@ impl<T: Cpu> Assembler<T> {
         Ok(asm)
     }
 
-    fn parse_expression<U>(&self, arg: Pair<Rule>, second_pass: bool) -> Result<U, String>
+    fn parse_expression<U>(&self, arg: &Pair<Rule>, second_pass: bool) -> Result<U, String>
     where
         U: TryFrom<u64> + Copy,
     {
         let value: u64 = match arg.as_rule() {
-            Rule::number => parse_int(arg.as_str()).map_err(|err| format_error(&arg, &err)),
-            Rule::identifier => {
-                if second_pass {
-                    self.symbols
-                        .get(arg.as_str())
-                        .copied()
-                        .ok_or_else(|| format_error(&arg, "Undefined label"))
-                } else {
-                    Ok(0)
-                }
-            }
+            Rule::expression => expression::parse(arg.as_str(), &self.symbols, second_pass)
+                .map_err(|e| format_error(arg, &format!("Failed to parse expression: {}", e))),
             Rule::character => {
                 let text = interpret_escaped_chars(arg.clone().into_inner().as_str());
                 Ok(u64::from(text.chars().next().unwrap()))
@@ -135,17 +127,32 @@ impl<T: Cpu> Assembler<T> {
                     self.declare_macro(mac)?;
                 }
             }
+            "if" => {
+                let expr = tokens
+                    .next()
+                    .ok_or(format_error(&command, "Expected at least one argument"))?;
+
+                let value = self.parse_expression::<u64>(&expr, true)?;
+                if value == 0 {
+                    for line in lines {
+                        if line.as_str().trim() == ".endif" {
+                            break;
+                        }
+                    }
+                }
+            }
+            "endif" => {}
             "include" => {
                 let filename = tokens.next().expect("Filename").into_inner().as_str();
                 let filename = self.path.parent().unwrap().join(filename);
                 self.include(&filename, second_pass)?;
             }
             "set" => {
-                if second_pass {
+                if !second_pass {
                     let expr = tokens
                         .next()
                         .ok_or(format_error(&command, "Expected at least one argument"))?;
-                    self.declare_label(self.parse_expression(expr, second_pass)?)?;
+                    self.declare_label(self.parse_expression(&expr, true)?)?;
                 }
             }
             "i8" => {
@@ -153,7 +160,7 @@ impl<T: Cpu> Assembler<T> {
                     self.declare_label(self.data.len() as u64)?;
                 }
                 for arg in tokens {
-                    let value = self.parse_expression::<u8>(arg, second_pass)?;
+                    let value = self.parse_expression::<u8>(&arg, second_pass)?;
                     self.data.push(value);
                 }
             }
@@ -162,7 +169,7 @@ impl<T: Cpu> Assembler<T> {
                     self.declare_label(self.data.len() as u64)?;
                 }
                 for arg in tokens {
-                    let value = self.parse_expression::<u16>(arg, second_pass)?;
+                    let value = self.parse_expression::<u16>(&arg, second_pass)?;
                     self.data.extend(value.to_be_bytes());
                 }
             }
@@ -173,7 +180,7 @@ impl<T: Cpu> Assembler<T> {
                 let count = tokens
                     .next()
                     .ok_or(format_error(&command, "Expected at least one argument"))?;
-                let count = self.parse_expression::<u64>(count, second_pass)?;
+                let count = self.parse_expression::<u64>(&count, second_pass)?;
                 for _ in 0..count {
                     self.data.push(0);
                 }
@@ -239,7 +246,7 @@ impl<T: Cpu> Assembler<T> {
                 } else if let Ok(reg) = T::Reg::try_from(x.as_str()) {
                     Ok(Token::Reg(reg))
                 } else {
-                    self.parse_expression(x, second_pass).map(Token::Imm)
+                    self.parse_expression(&x, second_pass).map(Token::Imm)
                 }
             })
             .collect::<Result<Vec<_>, String>>()?;
@@ -282,8 +289,8 @@ impl<T: Cpu> Assembler<T> {
 
     /// Includes a file into the current assembly.
     ///
-    /// This is expected to be called twice, once for the first pass and once for the second pass.
-    /// The first pass will declare all labels and macros
+    /// This is expected to be called twice, once for the first pass and again
+    /// for the second pass. The first pass will declare all labels and macros.
     /// The second pass will generate the assembly.
     fn include(&mut self, filename: &Path, second_pass: bool) -> Result<(), String> {
         let mut text = std::fs::read_to_string(filename)
