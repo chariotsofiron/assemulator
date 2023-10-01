@@ -11,4 +11,3 @@ pub enum Opcode {
     Beq,
     Jalr,
 }
-

@@ -56,10 +56,7 @@ impl Cpu for Risc16 {
         }
     }
 
-    fn parse(
-        tokens: Vec<Token<Self::Opcode, Self::Reg>>,
-        address: usize,
-    ) -> Result<Vec<u8>, String> {
+    fn parse(tokens: Vec<Token<Self::Opcode, Self::Reg>>, address: u64) -> Result<Vec<u8>, String> {
         use Opcode::*;
         use Token::*;
         let instruction = match *tokens {
@@ -71,12 +68,9 @@ impl Cpu for Risc16 {
             [Op(Ld), Reg(a), Reg(b), Imm(c)] => fmt2(0b100, a, b, c / 2)?,
             [Op(St), Reg(a), Reg(b), Imm(c)] if b.0 == 0 => fmt2(0b101, a, b, c)?,
             [Op(St), Reg(a), Reg(b), Imm(c)] => fmt2(0b101, a, b, c / 2)?,
-            [Op(Beq), Reg(a), Reg(b), Imm(c)] => fmt2(
-                0b110,
-                a,
-                b,
-                (((c.wrapping_sub(address as u64)) as i64) / 2) as u64,
-            )?,
+            [Op(Beq), Reg(a), Reg(b), Imm(c)] => {
+                fmt2(0b110, a, b, (((c.wrapping_sub(address)) as i64) / 2) as u64)?
+            }
             [Op(Jalr), Reg(a), Reg(b)] => fmt2(0b111, a, b, 0)?,
             _ => Err(format!("invalid instruction: {:?}", tokens))?,
         };

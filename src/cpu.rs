@@ -38,10 +38,7 @@ pub trait Cpu: Default {
     ///
     /// * `tokens` - The tokens to parse
     /// * `address` - The address the instruction will be placed at
-    fn parse(
-        tokens: Vec<Token<Self::Opcode, Self::Reg>>,
-        address: usize,
-    ) -> Result<Vec<u8>, String>;
+    fn parse(tokens: Vec<Token<Self::Opcode, Self::Reg>>, address: u64) -> Result<Vec<u8>, String>;
 
     /// Executes one instruction. Handles reading the instruction from memory, parsing
     /// it, and executing it. The function returns the number of cycles it took to execute.

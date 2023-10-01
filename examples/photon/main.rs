@@ -34,7 +34,7 @@ impl Cpu for Photon {
             ..Default::default()
         }
     }
-    fn parse(tokens: Vec<Token<Self::Opcode, Self::Reg>>, _: usize) -> Result<Vec<u8>, String> {
+    fn parse(tokens: Vec<Token<Self::Opcode, Self::Reg>>, _: u64) -> Result<Vec<u8>, String> {
         use Mnemonic::*;
         use Token::*;
         let inst: u16 = match *tokens {

@@ -251,7 +251,8 @@ impl<T: Cpu> Assembler<T> {
                 }
             })
             .collect::<Result<Vec<_>, String>>()?;
-        let bytes = T::parse(tokens, self.program.len()).map_err(|err| format_error(&arg, &err))?;
+        let bytes =
+            T::parse(tokens, self.program.len() as u64).map_err(|err| format_error(&arg, &err))?;
         Ok(bytes)
     }
 

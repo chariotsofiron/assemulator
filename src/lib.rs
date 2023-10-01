@@ -2,16 +2,15 @@ mod assembler;
 mod color;
 mod cpu;
 mod port;
+mod reg;
 mod screen;
 mod util;
-mod reg;
 
 pub use cpu::{Cpu, Token};
+pub use port::{Port, State};
 pub use reg::Register;
-pub use port::{State, Port};
 pub use util::mask;
 pub use util::parse_int;
-
 
 use assembler::Assembler;
 use clap::Parser;
