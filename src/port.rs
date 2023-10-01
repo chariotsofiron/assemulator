@@ -1,3 +1,4 @@
+use num_traits::Signed;
 use rand::{distributions::Standard, prelude::Distribution};
 use std::collections::VecDeque;
 use strum_macros::EnumIter;
@@ -98,10 +99,12 @@ pub struct State<T> {
 
 impl<T> State<T>
 where
-    T: Copy + core::fmt::Display + TryFrom<u64> + From<u8>,
+    T: std::fmt::Display + Copy,
     u8: TryFrom<T>,
     <u8 as TryFrom<T>>::Error: core::fmt::Debug,
     Standard: Distribution<T>,
+    T: From<u8> + TryFrom<u64>,
+    T: std::ops::BitAnd<Output = T>,
 {
     pub fn read_port(&mut self, port: Port) -> T {
         match port {

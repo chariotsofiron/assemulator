@@ -18,9 +18,8 @@ By doing so, you get a fully-featured assembler and emulator.
 - Immediate, relative, and direct addressing modes
 - Constants (hex, binary, decimal, chars, strings)
 - Directives (constants, set, fill, align)
-- Anonymous labels
+- Expression evaluation: `1 + 2 * 3`, `1 << 2`, etc.
 - Helpful error messages
-- [Documentation](./docs/assembler.md) (WIP)
 
 
 ## Emulator features

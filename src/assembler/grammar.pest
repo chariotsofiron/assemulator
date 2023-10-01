@@ -7,7 +7,7 @@ number = @{ "0b" ~ ASCII_BIN_DIGIT+ | "0x" ~ ASCII_HEX_DIGIT+ | "-"? ~ ASCII_DIG
 
 
 expression = @{(
-    (identifier | number |"+"|"-"|"*"|"/"|"("|")"|"<<"|">>"|"&"|"|"|"^"|"=="|"!=")~space
+    space?~(identifier|number|"&&"|"||"|"+"|"-"|"*"|"/"|"("|")"|"<<"|">>"|"&"|"|"|"^"|"=="|"!=")
 )+}
 
 label = @{ identifier }

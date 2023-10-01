@@ -13,11 +13,8 @@ strum = "0.24"
 strum_macros = "0.24"
 pest = "2.7.0"
 pest_derive = "2.4.0"
+num-traits = "0.2.16"
 
 [[bin]]
 path = "cpu/risc16/main.rs"
 name = "risc16"
-
-[[bin]]
-path = "src/assembler/expression.rs"
-name = "calc"

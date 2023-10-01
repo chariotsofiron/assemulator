@@ -10,6 +10,7 @@ pub use cpu::{Cpu, Token};
 pub use reg::Register;
 pub use port::{State, Port};
 pub use util::mask;
+pub use util::parse_int;
 
 
 use assembler::Assembler;

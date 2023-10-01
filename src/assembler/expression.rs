@@ -1,18 +1,31 @@
 use std::collections::HashMap;
 
-fn main() {
-    let input = "1+foo&";
-    let map = HashMap::from([("foo".to_string(), 3)]);
-    let mut parser = Parser::new(input, &map, true);
-    let result = parser.parse_expression(0);
-    match result {
-        Ok(value) => println!("Result: {:?}", value),
-        Err(e) => eprintln!("Error: {:?}", e),
-    }
-}
+// these should be sorted by length for maximal munch
+const OPERATORS: [(&str, usize); 18] = [
+    ("||", 0),
+    ("&&", 1),
+    ("==", 2),
+    ("!=", 2),
+    ("<=", 2),
+    (">=", 2),
+    ("<<", 9),
+    (">>", 9),
+    ("<", 2),
+    (">", 2),
+    ("|", 3),
+    ("^", 4),
+    ("&", 5),
+    // addition
+    ("+", 10),
+    ("-", 10),
+    // products
+    ("*", 20),
+    ("/", 20),
+    ("%", 20),
+];
 
 pub fn parse<'a>(
-    input: &'a str,
+    input: &str,
     symbols: &'a HashMap<String, u64>,
     resolve_labels: bool,
 ) -> Result<u64, String> {
@@ -22,16 +35,16 @@ pub fn parse<'a>(
 pub struct Parser<'a> {
     symbols: &'a HashMap<String, u64>,
     resolve_labels: bool,
-    input: &'a str,
+    input: String,
     i: usize,
 }
 
 impl<'a> Parser<'a> {
-    pub fn new(input: &'a str, symbols: &'a HashMap<String, u64>, resolve_labels: bool) -> Self {
+    pub fn new(input: &str, symbols: &'a HashMap<String, u64>, resolve_labels: bool) -> Self {
         Parser {
             symbols,
             resolve_labels,
-            input,
+            input: input.replace(" ", ""),
             i: 0,
         }
     }
@@ -44,42 +57,17 @@ impl<'a> Parser<'a> {
     }
 
     pub fn parse_expression(&mut self, precedence: usize) -> Result<u64, String> {
-        let operators = [
-            ("==", 2),
-            ("!=", 2),
-            ("<=", 2),
-            (">=", 2),
-            ("<", 2),
-            (">", 2),
-            ("|", 3),
-            ("^", 4),
-            ("&", 5),
-            ("<<", 6),
-            (">>", 6),
-            // addition
-            ("+", 10),
-            ("-", 10),
-            // products
-            ("*", 20),
-            ("/", 20),
-            ("%", 20),
-        ];
-
-        self.skip_whitespace();
         let mut left = self.parse_factor()?;
-        self.skip_whitespace();
-
-        while let Some((op, prec)) = operators
+        while let Some((op, prec)) = OPERATORS
             .iter()
             .find_map(|(x, y)| self.input[self.i..].starts_with(x).then(|| (*x, *y)))
         {
-            if prec <= precedence {
+            if prec < precedence {
                 break;
             }
-            self.accept(op).unwrap();
-            self.skip_whitespace();
-            let right = self.parse_expression(prec)?;
-            self.skip_whitespace();
+            self.accept(op);
+            let right = self.parse_expression(prec + 1)?;
+
             left = match op {
                 "+" => left.wrapping_add(right),
                 "-" => left.wrapping_sub(right),
@@ -97,20 +85,15 @@ impl<'a> Parser<'a> {
                 ">=" => u64::from(left >= right),
                 "==" => u64::from(left == right),
                 "!=" => u64::from(left != right),
+                "&&" => u64::from(left != 0 && right != 0),
+                "||" => u64::from(left != 0 || right != 0),
                 _ => unreachable!(),
             };
-        }
-        if self.i != self.input.len() {
-            return Err(format!(
-                "Didn't consume whole expression: {}",
-                &self.input[self.i..]
-            ));
         }
         Ok(left)
     }
 
     fn parse_factor(&mut self) -> Result<u64, String> {
-        println!("bburk `{}", &self.input[self.i..]);
         if self.accept("(").is_some() {
             let result = self.parse_expression(0)?;
             self.accept(")").ok_or("Expected closing parentheses")?;
@@ -141,13 +124,42 @@ impl<'a> Parser<'a> {
         } else if self.i >= self.input.len() {
             Err(format!("Unexpected end of input"))
         } else {
-            Err(format!("Expected number or identifier"))
+            Err(format!(
+                "Expected number or identifier {}",
+                &self.input[self.i..]
+            ))
         }
     }
+}
 
-    fn skip_whitespace(&mut self) {
-        while self.input[self.i..].starts_with(char::is_whitespace) {
-            self.i += 1;
-        }
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_atom() {
+        let input = "1";
+        let map = HashMap::new();
+        let mut parser = Parser::new(input, &map, false);
+        let result = parser.parse_factor();
+        assert_eq!(result, Ok(1));
+    }
+
+    #[test]
+    fn test_parse() {
+        let input = "1+2*3";
+        let map = HashMap::new();
+        let mut parser = Parser::new(input, &map, false);
+        let result = parser.parse_expression(0);
+        assert_eq!(result, Ok(7));
+    }
+
+    #[test]
+    fn test2() {
+        let input = "10 >> 1 == 0";
+        let map = HashMap::new();
+        let mut parser = Parser::new(input, &map, false);
+        let result = parser.parse_expression(0);
+        assert_eq!(result, Ok(0));
     }
 }

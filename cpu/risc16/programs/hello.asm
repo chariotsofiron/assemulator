@@ -1,8 +1,6 @@
 
         .include "macros.asm"
 
-
-
 text:   .i16 'H', 'e', 'l', 'l', 'o', ',', ' ', 'W', 'o', 'r', 'l', 'd', '!', '\n', '\0'
 
 main:   ld r1, r2, text

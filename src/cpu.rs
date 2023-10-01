@@ -12,8 +12,8 @@ pub enum Token<U, T> {
 }
 
 pub trait Cpu: Default {
-    type Opcode: for<'a> TryFrom<&'a str, Error = String>;
-    type Reg: for<'a> TryFrom<&'a str, Error = String>;
+    type Opcode: for<'a> TryFrom<&'a str, Error = String> + std::fmt::Debug;
+    type Reg: for<'a> TryFrom<&'a str, Error = String> + std::fmt::Debug;
 
     /// Creates a new state with the PC initialized.
     ///

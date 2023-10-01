@@ -5,11 +5,10 @@ use std::io::Write;
 /// # Examples
 ///
 /// ```rust
-/// use util::mask;
+/// use assemulator::mask;
 /// assert_eq!(mask(2, 2), Ok(2));
 /// assert_eq!(mask(0xff, 8), Ok(0xff));
-/// assert_eq!(mask(-2, 4), Ok(0b1110));
-/// assert_eq!(mask(5, 0), Ok(0));
+/// assert_eq!(mask(u64::MAX, 4), Ok(0b1111));
 /// ```
 ///  
 /// # Errors
@@ -23,7 +22,7 @@ where
     // Compute up to 2^64 - 1 without overflow
     let mask: u64 = ((1 << (n_bits - 1)) - 1) * 2 + 1;
     if ((value >> 63_i32) == 1 && ((!value).wrapping_add(1) > mask))
-        || ((value >> 63_i32) == 0 && value >= mask)
+        || ((value >> 63_i32) == 0 && value > mask)
     {
         return Err(format!("Value {value} does not fit in {n_bits} bits"));
     }
@@ -36,14 +35,13 @@ where
 /// # Examples
 ///
 /// ```rust
-/// use crate::util::parse_int;
-/// assert_eq!(parse_int("0x10"), Some(16));
-/// assert_eq!(parse_int("0b1010"), Some(10));
-/// assert_eq!(parse_int("0o10"), Some(8));
-/// assert_eq!(parse_int("10"), Some(10));
-/// assert_eq!(parse_int("-1"), Some(-1));
-/// assert_eq!(parse_int("-0b101"), Some(-5));
-/// assert_eq!(parse_int("abc"), None);
+/// use assemulator::parse_int;
+/// assert_eq!(parse_int("0x10"), Ok(16));
+/// assert_eq!(parse_int("0b1010"), Ok(10));
+/// assert_eq!(parse_int("0o10"), Ok(8));
+/// assert_eq!(parse_int("10"), Ok(10));
+/// assert_eq!(parse_int("-1"), Ok(u64::MAX));
+/// assert_eq!(parse_int("-0b101"), Ok(u64::MAX - 4));
 /// ```
 #[allow(clippy::option_if_let_else)]
 pub fn parse_int(text: &str) -> Result<u64, String> {

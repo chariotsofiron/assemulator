@@ -4,7 +4,7 @@ mod macros;
 use crate::{
     cpu::{Cpu, Token},
     port::Port,
-    util::{mask, parse_int},
+    util::mask,
 };
 use macros::Macro;
 use pest::{

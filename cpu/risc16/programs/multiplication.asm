@@ -1,6 +1,6 @@
         .include "macros.asm"
-        movi r2, 7              ; multiplicand
-        movi r3, 3              ; multiplier
+        movi r2, 12             ; multiplicand
+        movi r3, 154            ; multiplier
         movi r4, 1              ; mask = 1
         jmp mult
 
