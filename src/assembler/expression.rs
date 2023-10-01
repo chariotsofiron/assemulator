@@ -17,10 +17,8 @@ const OPERATORS: [(&str, usize); 18] = [
     ("|", 3),
     ("^", 4),
     ("&", 5),
-    // addition
     ("+", 10),
     ("-", 10),
-    // products
     ("*", 20),
     ("/", 20),
     ("%", 20),
@@ -31,7 +29,16 @@ pub fn parse<'a>(
     symbols: &'a HashMap<String, u64>,
     resolve_labels: bool,
 ) -> Result<u64, String> {
-    Parser::new(input, symbols, resolve_labels).parse_expression(0)
+    let mut parser = Parser::new(input, symbols, resolve_labels);
+    let result = parser.parse_expression(0);
+    if parser.i < parser.input.len() {
+        Err(format!(
+            "Unexpected input at position {}: {}",
+            parser.i, &parser.input[parser.i..]
+        ))
+    } else {
+        result
+    }
 }
 
 pub struct Parser<'a> {
@@ -92,13 +99,6 @@ impl<'a> Parser<'a> {
                 _ => unreachable!(),
             };
         }
-        if self.i < self.input.len() {
-            return Err(format!(
-                "Unexpected token {} at position {}",
-                &self.input[self.i..].chars().next().unwrap(),
-                self.i
-            ));
-        }
         Ok(left)
     }
 
@@ -153,8 +153,7 @@ mod tests {
     fn test_atom() {
         let input = "1";
         let map = HashMap::new();
-        let mut parser = Parser::new(input, &map, false);
-        let result = parser.parse_factor();
+        let result = parse(&input, &map, false);
         assert_eq!(result, Ok(1));
     }
 
@@ -162,8 +161,7 @@ mod tests {
     fn test_parse() {
         let input = "1+2*3";
         let map = HashMap::new();
-        let mut parser = Parser::new(input, &map, false);
-        let result = parser.parse_expression(0);
+        let result = parse(&input, &map, false);
         assert_eq!(result, Ok(7));
     }
 
@@ -171,8 +169,23 @@ mod tests {
     fn test2() {
         let input = "10 >> 1 == 0";
         let map = HashMap::new();
-        let mut parser = Parser::new(input, &map, false);
-        let result = parser.parse_expression(0);
+        let result = parse(&input, &map, false);
         assert_eq!(result, Ok(0));
+    }
+
+    #[test]
+    fn test3() {
+        let input = "12 >> 6 != 0 && (12 >> 6) & 1023 != 1023";
+        let map = HashMap::new();
+        let result = parse(&input, &map, false);
+        assert_eq!(result, Ok(0));
+    }
+
+    #[test]
+    fn test4() {
+        let input = "23#";
+        let map = HashMap::new();
+        let result = parse(&input, &map, false);
+        assert_eq!(result, Err("Unexpected input at position 2: #".to_string()));
     }
 }

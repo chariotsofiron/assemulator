@@ -72,6 +72,9 @@ impl Cpu for Risc16 {
                 fmt2(0b110, a, b, (((c.wrapping_sub(address)) as i64) / 2) as u64)?
             }
             [Op(Jalr), Reg(a), Reg(b)] => fmt2(0b111, a, b, 0)?,
+            // pseudo-ops
+            [Op(Add), Reg(a), Imm(b)] => fmt2(0b001, a, a, b)?,
+            [Op(Add), Reg(a), Reg(b)] => fmt1(0b000, a, a, b),
             _ => Err(format!("invalid instruction: {:?}", tokens))?,
         };
         Ok(instruction.to_be_bytes().to_vec())

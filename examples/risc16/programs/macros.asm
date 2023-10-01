@@ -28,9 +28,9 @@ not:    .macro dest, src
 
 
 sub:    .macro dest, src1, src2
-        not $dest, $src2                ; invert src2
-        add $dest, $dest, 1             ; add 1 to src2
-        add $dest, $dest, $src1         ; add src1 to src2
+        not $dest, $src2         ; invert src2
+        add $dest, 1             ; add 1 to src2
+        add $dest, $src1         ; add src1 to src2
         .endm
 
 print:  .macro src
