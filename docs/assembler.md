@@ -4,7 +4,9 @@
 ## Running the assembler
 
 ```shell
-Usage: assemulator <PROCESSOR> <FILE> <COMMAND>
+Instruction set simulator
+
+Usage: <CPU> <FILE> <COMMAND>
 
 Commands:
   assemble  Assemble the program
@@ -12,26 +14,10 @@ Commands:
   help      Print this message or the help of the given subcommand(s)
 
 Arguments:
-  <PROCESSOR>  The processor to use [possible values: risc16, bit-twiddler]
-  <FILE>       Input file
+  <FILE>  Input file
 
 Options:
-  -h, --help  Print help information
-```
-
-## Example
-
-```shell
-$ bit-twiddler insertion_sort.asm run
-
-Program: 40 bytes
-Data: 5 bytes
------------------
-1
-2
-3
-4
-5
+  -h, --help  Print help
 ```
 
 ## General Syntax
