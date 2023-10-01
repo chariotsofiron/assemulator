@@ -1,4 +1,3 @@
-use num_traits::Signed;
 use rand::{distributions::Standard, prelude::Distribution};
 use std::collections::VecDeque;
 use strum_macros::EnumIter;

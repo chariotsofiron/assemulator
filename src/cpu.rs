@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 /// A token from the assembler
 /// Register type is to be specified by the CPU.
 /// This is better than an integer because we can have custom names for registers
@@ -12,8 +14,10 @@ pub enum Token<U, T> {
 }
 
 pub trait Cpu: Default {
-    type Opcode: for<'a> TryFrom<&'a str, Error = String> + std::fmt::Debug;
-    type Reg: for<'a> TryFrom<&'a str, Error = String> + std::fmt::Debug;
+    // type Opcode: for<'a> TryFrom<&'a str, Error = String> + std::fmt::Debug;
+    // type Reg: for<'a> TryFrom<&'a str, Error = String> + std::fmt::Debug;
+    type Opcode: FromStr;
+    type Reg: FromStr;
 
     /// Creates a new state with the PC initialized.
     ///

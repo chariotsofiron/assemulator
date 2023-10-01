@@ -2,7 +2,7 @@
 
 Assemulator is a framework for designing, assembling, and emulating instruction sets.
 
-Adding support for an instruction set is done by implementing three functions (defined and documented [here](src/cpus/mod.rs))
+Adding support for an instruction set is done by implementing three functions (defined and documented [here](src/cpu.rs))
 
 ```rust
 fn new(pc: u64, program: Vec<u8>, data: Vec<u8>) -> Self;
@@ -56,16 +56,12 @@ I'm still working on porting some of my other CPUs.
 Insertion sort running on bit-twiddler
 
 ```shell
-$ cargo run --release -- bit-twiddler ./src/cpus/bit_twiddler/programs/insertion_sort.asm run
-
-Program: 40 bytes
-Data: 5 bytes
+$ cargo run --bin risc16 cpu/risc16/programs/multiplication.asm run
+Program: 28 bytes
+Data: 0 bytes
+Data: []
 -----------------
-1
-2
-3
-4
-5
+1848
 ```
 
 Bresenham running on bit-twiddler
@@ -84,10 +80,3 @@ Data: 0 bytes
 # Limitations
 
 - Can't dynamically pick an instruction based on size of immediate
-
-
-## Linting
-
-```bash
-cargo clippy -- -W clippy::all -W clippy::pedantic -W clippy::nursery
-```

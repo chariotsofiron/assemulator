@@ -1,4 +1,7 @@
-#[derive(Debug)]
+use strum_macros::EnumString;
+
+#[derive(Debug, EnumString)]
+#[strum(ascii_case_insensitive)]
 pub enum Opcode {
     Add,
     Nand,
@@ -9,19 +12,3 @@ pub enum Opcode {
     Jalr,
 }
 
-impl TryFrom<&str> for Opcode {
-    type Error = String;
-
-    fn try_from(value: &str) -> Result<Self, Self::Error> {
-        match value {
-            "add" => Ok(Self::Add),
-            "nand" => Ok(Self::Nand),
-            "lui" => Ok(Self::Lui),
-            "ld" => Ok(Self::Ld),
-            "st" => Ok(Self::St),
-            "beq" => Ok(Self::Beq),
-            "jalr" => Ok(Self::Jalr),
-            _ => Err(format!("Invalid opcode: {value}")),
-        }
-    }
-}

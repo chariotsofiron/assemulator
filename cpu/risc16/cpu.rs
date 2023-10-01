@@ -1,5 +1,7 @@
-use crate::opcode::Opcode;
-use assemulator::{mask, Cpu, Port, State, Token};
+mod opcode;
+
+use assemulator::{mask, run, Cpu, Port, State, Token};
+use opcode::Opcode;
 use std::num::Wrapping;
 
 type Register = assemulator::Register<8>;
@@ -59,7 +61,7 @@ impl Cpu for Risc16 {
         address: usize,
     ) -> Result<Vec<u8>, String> {
         use Opcode::*;
-        use Token::{Imm, Op, Reg};
+        use Token::*;
         let instruction = match *tokens {
             [Op(Add), Reg(a), Reg(b), Reg(c)] => fmt1(0b000, a, b, c),
             [Op(Add), Reg(a), Reg(b), Imm(c)] => fmt2(0b001, a, b, c)?,
@@ -146,4 +148,8 @@ impl Cpu for Risc16 {
         self.regs[0] = Wrapping(0); // R0 is always 0
         usize::from(usize::from(self.pc.0) < self.program.len())
     }
+}
+
+fn main() {
+    run::<Risc16>();
 }

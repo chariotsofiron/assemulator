@@ -13,8 +13,13 @@ strum = "0.24"
 strum_macros = "0.24"
 pest = "2.7.0"
 pest_derive = "2.4.0"
-num-traits = "0.2.16"
 
 [[bin]]
-path = "cpu/risc16/main.rs"
+path = "cpu/risc16/cpu.rs"
 name = "risc16"
+
+
+[[bin]]
+path = "cpu/photon/cpu.rs"
+name = "photon"
+

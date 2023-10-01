@@ -241,9 +241,9 @@ impl<T: Cpu> Assembler<T> {
             .clone()
             .into_inner()
             .map(|x| {
-                if let Ok(opcode) = T::Opcode::try_from(x.as_str()) {
+                if let Ok(opcode) = x.as_str().parse::<T::Opcode>() {
                     Ok(Token::Op(opcode))
-                } else if let Ok(reg) = T::Reg::try_from(x.as_str()) {
+                } else if let Ok(reg) = x.as_str().parse::<T::Reg>() {
                     Ok(Token::Reg(reg))
                 } else {
                     self.parse_expression(&x, second_pass).map(Token::Imm)

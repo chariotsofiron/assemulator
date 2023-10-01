@@ -12,47 +12,21 @@
 - [x] macros
 - [x] implement multi-instruction pseudo-ops for some architectures as macros
 - [x] includes
-- [ ] add label prefix for includes
-- [ ] only display screen if we draw to it
+- [x] evaluate math expressions e.g. `table + arr[2+str]`
+- [x] .if directive
+- [ ] Data alignment
 - [ ] Step simulation / debugger
+- [ ] only display screen if we draw to it
+- [ ] fixed-point constants (i0.8, i5.3, i8.16, i32.32, etc.)
+- [ ] add label prefix for includes
 - [ ] Function scopes with `{}`
 - [ ] Output to logisim
 - [ ] implement forwarding/hazard logic
     - how to do this in a generic way?
-- [ ] fixed-point constants (i0.8, i5.3, i8.16, i32.32, etc.)
-- [ ] evaluate math expressions e.g. `table + arr[2+str]`
 - [ ] implement symbols for ports which need to be CPU-defined
 - [ ] CPU interrupts
 
 
-```
-cargo clippy -- -W clippy::all -W clippy::pedantic -W clippy::restriction -W clippy::nursery -A clippy::implicit_return -A clippy::unseparated_literal_suffix -A clippy::pub_use -A clippy::std_instead_of_core
-```
 
-TODO v2
-- just do anon labels and macros
-
-- [x] macros
-- [x] include
-- [ ] include namespaces
-- [ ] anonymous labels
-- [ ] .if directive
-- [ ] align data automatically
-
-e.g.
-
-
-add
-add
-add
-
-    .if symbol < 5
-        add
-        add
-    .endif
-    .if symbol >= 5
-        add
-
-.org 4
-symbol:
-    add
+- Move cpus to examples folder
+- use dev-dependencies
