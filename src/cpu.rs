@@ -14,8 +14,6 @@ pub enum Token<U, T> {
 }
 
 pub trait Cpu: Default {
-    // type Opcode: for<'a> TryFrom<&'a str, Error = String> + std::fmt::Debug;
-    // type Reg: for<'a> TryFrom<&'a str, Error = String> + std::fmt::Debug;
     type Opcode: FromStr;
     type Reg: FromStr;
 
