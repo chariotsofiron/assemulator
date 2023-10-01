@@ -10,5 +10,5 @@ collatz:
         bt b, collatz
         ret
 
-main:   mov a, 19
+main:   mov a, 6
         jsr collatz

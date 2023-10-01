@@ -5,11 +5,11 @@
         mov c, 0xff
         mov d, 0x0f
 
-@:      add a, -1
-        bt a, -
+loop:   add a, -1
+        bt a, loop
         add b, -1
-        bt b, -
+        bt b, loop
         add c, -1
-        bt c, -
+        bt c, loop
         add d, -1
-        bt d, -
+        bt d, loop

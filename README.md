@@ -56,7 +56,7 @@ I'm still working on porting some of my other CPUs.
 Insertion sort running on bit-twiddler
 
 ```shell
-$ cargo run --bin risc16 cpu/risc16/programs/multiplication.asm run
+$ cargo run --example risc16 cpu/risc16/programs/multiplication.asm run
 Program: 28 bytes
 Data: 0 bytes
 Data: []
@@ -64,10 +64,10 @@ Data: []
 1848
 ```
 
-Bresenham running on bit-twiddler
+Bresenham running on photon
 
 ```shell
-$ cargo run --release -- bit-twiddler ./src/cpus/bit_twiddler/programs/wip/bresenham.asm run
+$ cargo run --example photon ./src/cpus/bit_twiddler/programs/wip/bresenham.asm run
 
 Program: 98 bytes
 Data: 0 bytes
@@ -76,7 +76,3 @@ Data: 0 bytes
 
 ![bresenham](./images/bresenham.png)
 
-
-# Limitations
-
-- Can't dynamically pick an instruction based on size of immediate

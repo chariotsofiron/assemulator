@@ -17,6 +17,8 @@ use assembler::Assembler;
 use clap::Parser;
 use std::path::PathBuf;
 
+use crate::util::input;
+
 #[derive(Parser)]
 #[command(about = "Instruction set simulator")]
 struct Args {

@@ -107,7 +107,7 @@ impl Cpu for Photon {
             // pseudo-ops
             [Op(Jsr), Imm(x)] => 0xf300 | mask::<u16>(x / 2, 8)?,
             [Op(Ret)] => 0xf600,
-            [Op(Add), Reg(ra), Imm(x)] => ra.to_a() | 0x1e00 | mask::<u16>(x, 5)?,
+            [Op(Add), Reg(ra), Imm(x)] => ra.to_a() | 0x1e00 | ra.to_b() | mask::<u16>(x, 5)?,
 
             [Op(Shl), Reg(ra)] => ra.to_a() | ra.to_b() | 0x10,
             [Op(Shlc), Reg(ra)] => ra.to_a() | ra.to_b() | 0x11,
@@ -133,12 +133,12 @@ impl Cpu for Photon {
         let inst = self.program[usize::from(self.pc.0)];
         self.pc += 1;
 
-        let ra = usize::from(inst.wrapping_shr(13));
-        let rb = usize::from(inst.wrapping_shr(5));
+        let ra = usize::from(inst.wrapping_shr(13) & 0b111);
+        let rb = usize::from(inst.wrapping_shr(5) & 0b111);
 
         let z = if inst & 0x1c00 == 0x1c00 {
             // 5 bit sign extension
-            (inst & 0x1f ^ 0x10) - 0x10
+            (inst & 0x1f ^ 0x10).wrapping_sub(0x10)
         } else {
             inst & 0xff
         };

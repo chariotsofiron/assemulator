@@ -23,12 +23,12 @@
 ; tmp b: num2
 fib:    mov a, 1
         mov b, 0
-        mov c, 6
-@:      add a, b
-        pst b, @ticker
+        mov c, 6        ; 14th fib number
+loop:   add a, b
+        pst b, ticker
         add b, a
-        pst a, @ticker
-        btd c, -
+        pst a, ticker
+        btd c, loop
         ret
 
 

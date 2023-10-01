@@ -2,11 +2,11 @@
 ; arg a: pointer to array
 ; arg b: number of elements
 ; clobbers: a, b, c
-@:      pop c, a
+l0:     pop c, a
         pst c, ticker
 arr_print:
-        btd b, -
-        ret
+        btd b, l0
+        jmp end
 
 
 ; Insertion sort
@@ -30,21 +30,23 @@ arr:    .i8 4, 1, 3, 2, 5
 main:   mov b, 4        ; length of array minus one
         add g, b, -1    ; g = b - 2
 
-@:      ld c, g         ; c = [g]
+outer:  ld c, g         ; c = [g]
         mov f, b
         sub f, g
         add h, g, 1     ; h = g + 1
 
-@:      pop d, h        ; d = [h++]
+inner:  pop d, h        ; d = [h++]
         geq d, c        ; d >= c?
-        bt +            ; goto next
+        bt next         ; goto next
         st d, h, -2     ; [h+2] = d
-        btd f, -
+        btd f, inner
 
-@:      st c, h, -2
-        btd g, ---
+next:   st c, h, -2
+        btd g, outer
 
         ; print array
         mov a, arr
         mov b, 5
         jsr arr_print
+
+end:

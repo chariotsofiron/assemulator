@@ -192,7 +192,8 @@ impl<T: Cpu> Assembler<T> {
                 let string = interpret_escaped_chars(
                     tokens
                         .next()
-                        .ok_or(format_error(&command, "Missing string"))?
+                        .ok_or(format_error(&command, "Expected one argument"))?
+                        .into_inner()
                         .as_str(),
                 );
                 self.data.extend(string.as_bytes());

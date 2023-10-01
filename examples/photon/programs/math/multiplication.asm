@@ -30,7 +30,7 @@ mult2:  btd c, loop
 main:   mov b, 3
         mov c, 15
         jsr mult
-        pst a, @ticker
+        pst a, ticker
 
 
 

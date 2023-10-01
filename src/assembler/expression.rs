@@ -1,5 +1,7 @@
 use std::collections::HashMap;
 
+use crate::util;
+
 // these should be sorted by length for maximal munch
 const OPERATORS: [(&str, usize); 18] = [
     ("||", 0),
@@ -90,6 +92,13 @@ impl<'a> Parser<'a> {
                 _ => unreachable!(),
             };
         }
+        if self.i < self.input.len() {
+            return Err(format!(
+                "Unexpected token {} at position {}",
+                &self.input[self.i..].chars().next().unwrap(),
+                self.i
+            ));
+        }
         Ok(left)
     }
 
@@ -102,7 +111,9 @@ impl<'a> Parser<'a> {
             self.parse_factor().map(|x| (!x).wrapping_add(1)) // negate by 2s complement
         } else if self.input[self.i..].starts_with(char::is_alphabetic) {
             let start = self.i;
-            while self.input[self.i..].starts_with(char::is_alphanumeric) {
+            while self.input[self.i..].starts_with(char::is_alphanumeric)
+                || self.input[self.i..].starts_with('_')
+            {
                 self.i += 1;
             }
             let ident = &self.input[start..self.i];
@@ -116,11 +127,13 @@ impl<'a> Parser<'a> {
             }
         } else if self.input[self.i..].starts_with(char::is_numeric) {
             let start = self.i;
-            while self.input[self.i..].starts_with(char::is_numeric) {
+            while self.input[self.i..].starts_with(char::is_alphanumeric)
+                || self.input[self.i..].starts_with('_')
+            {
                 self.i += 1;
             }
             let num = &self.input[start..self.i];
-            u64::from_str_radix(num, 10).map_err(|e| e.to_string())
+            util::parse_int(num)
         } else if self.i >= self.input.len() {
             Err(format!("Unexpected end of input"))
         } else {
